@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #141414;
+    color: #ffffff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track { background: #141414; }
+  ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #E50914; }
+}
+
+@layer components {
+  /* ── Movie row horizontal scroll ── */
+  .row-scroll {
+    @apply flex gap-2 overflow-x-auto pb-2;
+    scrollbar-width: none;
+  }
+  .row-scroll::-webkit-scrollbar { display: none; }
+
+  /* ── Netflix-style button ── */
+  .btn-netflix {
+    @apply inline-flex items-center gap-2 px-6 py-2 rounded font-semibold
+           transition-all duration-200 cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn-netflix bg-white text-black hover:bg-gray-200;
+  }
+  .btn-secondary {
+    @apply btn-netflix bg-gray-600/70 text-white hover:bg-gray-500/70;
+  }
+  .btn-red {
+    @apply btn-netflix bg-netflix-red text-white hover:bg-red-700;
+  }
+
+  /* ── Input fields ── */
+  .input-dark {
+    @apply w-full bg-[#333] border border-gray-600 rounded px-4 py-3
+           text-white placeholder-gray-400 focus:outline-none
+           focus:border-white transition-colors;
+  }
+}
+
+@layer utilities {
+  .text-shadow { text-shadow: 2px 2px 8px rgba(0,0,0,0.8); }
+  .gradient-bottom {
+    background: linear-gradient(to top, #141414 0%, transparent 60%);
+  }
+  .gradient-left {
+    background: linear-gradient(to right, #141414 30%, transparent 100%);
+  }
+}

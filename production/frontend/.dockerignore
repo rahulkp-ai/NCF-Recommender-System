@@ -1,0 +1,36 @@
+# production/frontend/.dockerignore
+#
+# Missing from the original repo — this gap is the root cause of a
+# "Cannot find module '/app/server.js'" runtime error in the `web`
+# container. Without excluding these, `COPY . .` in frontend.Dockerfile's
+# builder stage can copy a local .next/ (built with different settings,
+# e.g. before output: "standalone" was set) or a macOS-native
+# node_modules/ on top of what the container just installed/built,
+# corrupting Next.js's standalone output tracing so .next/standalone/
+# ends up missing server.js (or nested at the wrong path) by the time
+# the runner stage tries to copy it out.
+
+node_modules
+.next
+out
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.env
+.env.local
+.env.*.local
+
+.git
+.gitignore
+.dockerignore
+
+.vscode
+.idea
+*.swp
+
+__tests__
+jest.config.js
+
+README.md
