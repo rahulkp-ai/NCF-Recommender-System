@@ -1,0 +1,44 @@
+# Local development overrides — automatically picked up by `docker compose up`
+# alongside docker-compose.yml. Not used in CI/CD (see cd.yaml) or production.
+#
+# NOTE (Phase 4 correction): the original version of this file referenced
+# a `target: development` build stage that doesn't exist in
+# deployment/docker/backend.Dockerfile (it's single-stage), and used a
+# `frontend` service name that doesn't match docker-compose.yml's actual
+# `web` service. Both fixed here.
+#
+# NOTE 2: the `version:` key (Compose file format version) is obsolete in
+# the modern Docker Compose spec and was removed — it only produced a
+# harmless warning, but a clean removal is one less thing to explain.
+
+services:
+  backend:
+    volumes:
+      - ./production/backend:/app/production/backend
+      - ./production/observability:/app/production/observability
+      - ./production/shared:/app/production/shared
+    environment:
+      - RELOAD=true
+      - LOG_LEVEL=debug
+    command: uvicorn production.backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  model_server:
+    volumes:
+      - ./production/serving:/app/production/serving
+      - ./production/recommenders:/app/production/recommenders
+      - ./production/artifacts:/app/production/artifacts:ro
+      - ./production/observability:/app/production/observability
+      - ./production/shared:/app/production/shared
+    environment:
+      - LOG_LEVEL=debug
+
+  # NOTE (correction): `web` intentionally has NO override here. Its
+  # Dockerfile is a multi-stage build producing a standalone Next.js
+  # server (server.js is a build artifact, not part of the source
+  # tree) — bind-mounting source over /app the way backend/model_server
+  # do would silently overwrite that built server.js at container
+  # start, causing "Cannot find module '/app/server.js'". `web` just
+  # uses docker-compose.yml's plain production build/image as-is; if
+  # you want frontend hot-reload during local dev, run
+  # `cd production/frontend && npm run dev` directly on the host
+  # instead of through Docker.

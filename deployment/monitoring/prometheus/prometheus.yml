@@ -1,0 +1,19 @@
+# Reference config — the Prometheus *server* is not deployed by default
+# on the free-tier PaaS target, but the /metrics endpoints below are
+# real and working as of Phase 5 (production/observability/metrics/) —
+# this config is not aspirational anymore, just optional. Intended for
+# use if/when the stack moves to a host that supports a sidecar
+# Prometheus (e.g. self-hosted Docker Compose or Kubernetes).
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "backend"
+    static_configs:
+      - targets: ["backend:8000"]
+    metrics_path: /metrics
+
+  - job_name: "model_server"
+    static_configs:
+      - targets: ["model_server:8001"]
+    metrics_path: /metrics
