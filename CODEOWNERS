@@ -1,0 +1,22 @@
+# Default owner for everything in the repo, unless a later match takes precedence.
+
+-                        @rahulkp-ai
+
+# Research artifacts (models, notebooks, experiments, thesis, paper)
+
+/research/ @rahulkp-ai
+/thesis/ @rahulkp-ai
+/ieee/ @rahulkp-ai
+
+# Production services (backend, model server, recommenders, frontend)
+
+/production/backend/ @rahulkp-ai
+/production/serving/ @rahulkp-ai
+/production/recommenders/ @rahulkp-ai
+/production/frontend/ @rahulkp-ai
+/production/gateway-optional/ @rahulkp-ai
+
+# Infra / CI
+
+/.github/ @rahulkp-ai
+/deployment/ @rahulkp-ai
