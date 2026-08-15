@@ -1,0 +1,137 @@
+{
+  "type": "pytorch",
+  "device": "mps",
+  "config": {
+    "emb_dim": 32,
+    "hidden": [
+      64,
+      32
+    ],
+    "lr": 0.001,
+    "batch_size": 1024
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "loss": 0.365834,
+      "hit_at_10": null,
+      "time_sec": 48.58
+    },
+    {
+      "epoch": 2,
+      "loss": 0.350196,
+      "hit_at_10": 0.415,
+      "time_sec": 46.82
+    },
+    {
+      "epoch": 3,
+      "loss": 0.324,
+      "hit_at_10": null,
+      "time_sec": 49.06
+    },
+    {
+      "epoch": 4,
+      "loss": 0.301761,
+      "hit_at_10": 0.545,
+      "time_sec": 52.32
+    },
+    {
+      "epoch": 5,
+      "loss": 0.289435,
+      "hit_at_10": null,
+      "time_sec": 49.63
+    },
+    {
+      "epoch": 6,
+      "loss": 0.280505,
+      "hit_at_10": 0.585,
+      "time_sec": 46.52
+    },
+    {
+      "epoch": 7,
+      "loss": 0.273637,
+      "hit_at_10": null,
+      "time_sec": 50.98
+    },
+    {
+      "epoch": 8,
+      "loss": 0.267807,
+      "hit_at_10": 0.54,
+      "time_sec": 48.05
+    },
+    {
+      "epoch": 9,
+      "loss": 0.262691,
+      "hit_at_10": null,
+      "time_sec": 47.22
+    },
+    {
+      "epoch": 10,
+      "loss": 0.258079,
+      "hit_at_10": 0.565,
+      "time_sec": 46.91
+    },
+    {
+      "epoch": 11,
+      "loss": 0.253954,
+      "hit_at_10": null,
+      "time_sec": 46.62
+    },
+    {
+      "epoch": 12,
+      "loss": 0.250271,
+      "hit_at_10": 0.575,
+      "time_sec": 47.51
+    },
+    {
+      "epoch": 13,
+      "loss": 0.246953,
+      "hit_at_10": null,
+      "time_sec": 48.03
+    },
+    {
+      "epoch": 14,
+      "loss": 0.24393,
+      "hit_at_10": 0.56,
+      "time_sec": 48.84
+    },
+    {
+      "epoch": 15,
+      "loss": 0.241174,
+      "hit_at_10": null,
+      "time_sec": 48.04
+    },
+    {
+      "epoch": 16,
+      "loss": 0.238679,
+      "hit_at_10": 0.585,
+      "time_sec": 48.56
+    },
+    {
+      "epoch": 17,
+      "loss": 0.236367,
+      "hit_at_10": null,
+      "time_sec": 50.18
+    },
+    {
+      "epoch": 18,
+      "loss": 0.234298,
+      "hit_at_10": 0.58,
+      "time_sec": 47.14
+    },
+    {
+      "epoch": 19,
+      "loss": 0.232384,
+      "hit_at_10": null,
+      "time_sec": 49.3
+    },
+    {
+      "epoch": 20,
+      "loss": 0.230655,
+      "hit_at_10": 0.615,
+      "time_sec": 48.91
+    }
+  ],
+  "total_time_sec": 972.1,
+  "best_hit_at_10": 0.615
+}

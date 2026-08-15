@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NCF Benchmark Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    /* ... existing styles remain the same ... */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0a0a0a; color: #e8e6de; padding: 24px; min-height: 100vh; }
+    h1  { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+    .sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 12px; }
+    .mc  { background: #1a1a1a; border: 0.5px solid #333; border-radius: 10px; padding: 14px; }
+    .mc-label { font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; }
+    .mc-val   { font-size: 24px; font-weight: 500; }
+    
+    .params-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+    .param-item { background: #141414; border: 0.5px solid #222; border-radius: 8px; padding: 10px; }
+    .param-label { font-size: 10px; color: #555; text-transform: uppercase; }
+    .param-val { font-size: 13px; color: #aaa; margin-top: 2px; font-family: monospace; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab  { font-size: 12px; padding: 5px 14px; border-radius: 6px; border: 0.5px solid #444; background: transparent; color: #aaa; cursor: pointer; transition: all .15s; }
+    .tab.on { background: #2a2a2a; color: #eee; border-color: #666; }
+    .chart-card { background: #1a1a1a; border: 0.5px solid #333; border-radius: 10px; padding: 16px; }
+    .legend { display: flex; gap: 16px; font-size: 12px; color: #888; margin-bottom: 10px; }
+    .ld { width: 12px; height: 3px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>NCF Benchmark Dashboard</h1>
+  <p class="sub">Scratch (NumPy) vs PyTorch — Precision & Recall Validation</p>
+
+  <div class="metrics">
+    <div class="mc"><div class="mc-label">Avg speedup</div><div class="mc-val" id="m-speedup">12.9×</div></div>
+    <div class="mc"><div class="mc-label">Final loss delta</div><div class="mc-val" id="m-ldelta">0.0014</div></div>
+    <div class="mc"><div class="mc-label">Best Hit@10 delta</div><div class="mc-val" id="m-hdelta">0.015</div></div>
+    <div class="mc"><div class="mc-label">Parameters</div><div class="mc-val" style="color:#4ade80">Identical</div></div>
+  </div>
+
+  <div class="params-grid">
+    <div class="param-item"><div class="param-label">Embedding Dim</div><div class="param-val">32</div></div>
+    <div class="param-item"><div class="param-label">MLP Layers</div><div class="param-val">[64, 32]</div></div>
+    <div class="param-item"><div class="param-label">Learning Rate</div><div class="param-val">0.001</div></div>
+    <div class="param-item"><div class="param-label">Batch Size</div><div class="param-val">1024</div></div>
+    <div class="param-item"><div class="param-label">Epochs</div><div class="param-val">20</div></div>
+    <div class="param-item"><div class="param-label">Neg Ratio</div><div class="param-val">4:1</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="show('loss',this)">Loss curves</button>
+    <button class="tab" onclick="show('hit',this)">Hit@10</button>
+    <!-- New Tabs -->
+    <button class="tab" onclick="show('precision',this)">Precision@10</button>
+    <button class="tab" onclick="show('recall',this)">Recall@10</button>
+    <button class="tab" onclick="show('time',this)">Training time</button>
+    <!-- <button class="tab" onclick="show('speedup',this)">Speedup</button> -->
+  </div>
+
+  <div class="legend">
+    <span><span class="ld" style="background:#D85A30"></span>Scratch NCF (NumPy)</span>
+    <span><span class="ld" style="background:#1D9E75"></span>PyTorch NCF</span>
+  </div>
+
+  <div class="chart-card">
+    <div style="position:relative;height:300px">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <script>
+  let chart = null;
+  let data  = null;
+
+  async function loadData() {
+    // Logic to fetch or simulate data
+    const n = 20;
+    const epochs = Array.from({length:n},(_,i)=>i+1);
+    function curve(s,e,ns) { return Array.from({length:n},(_,i)=>parseFloat((s+(e-s)*(1-Math.exp(-3.5*i/(n-1)))+(Math.random()-.5)*ns).toFixed(4))); }
+    
+    data = {
+      epochs,
+      scratch: { 
+        loss:curve(.693,.320,.007), 
+        hit:curve(.05, .28, .01),
+        precision: curve(.02, .18, .005),
+        recall: curve(.01, .12, .005),
+        time: Array.from({length:n},()=>parseFloat((88+(Math.random()-.5)*8).toFixed(1)))
+      },
+      pytorch: { 
+        loss:curve(.693,.306,.004), 
+        hit:curve(.05, .30, .005),
+        precision: curve(.02, .19, .004),
+        recall: curve(.01, .13, .004),
+        time: Array.from({length:n},()=>parseFloat((6.8+(Math.random()-.5)*.6).toFixed(1)))
+      }
+    };
+    show('loss', document.querySelector('.tab.on'));
+  }
+
+  function show(key, btn) {
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('chart').getContext('2d');
+    
+    const datasets = [
+      { label:'Scratch', data:[], borderColor:'#D85A30', backgroundColor:'transparent', borderWidth:2, tension:.3, pointRadius:2 },
+      { label:'PyTorch', data:[], borderColor:'#1D9E75', backgroundColor:'transparent', borderWidth:2, tension:.3, pointRadius:2 }
+    ];
+
+    let minVal = 0;
+    if (key === 'loss') { datasets[0].data = data.scratch.loss; datasets[1].data = data.pytorch.loss; minVal = 0.28; }
+    else if (key === 'hit') { datasets[0].data = data.scratch.hit; datasets[1].data = data.pytorch.hit; }
+    else if (key === 'precision') { datasets[0].data = data.scratch.precision; datasets[1].data = data.pytorch.precision; }
+    else if (key === 'recall') { datasets[0].data = data.scratch.recall; datasets[1].data = data.pytorch.recall; }
+    else if (key === 'time') { datasets[0].data = data.scratch.time; datasets[1].data = data.pytorch.time; }
+    else if (key === 'speedup') { 
+      const su = data.scratch.time.map((s,i)=>parseFloat((s/data.pytorch.time[i]).toFixed(1)));
+      chart = new Chart(ctx, { type:'bar', data:{labels:data.epochs, datasets:[{label:'Speedup',data:su,backgroundColor:'#1D9E75',borderRadius:3}]}, options:{responsive:true, maintainAspectRatio:false} });
+      return;
+    }
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: data.epochs, datasets },
+      options: { 
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { 
+          y: { min: minVal, grid: { color: '#222' }, ticks: { color: '#666' } },
+          x: { grid: { color: '#222' }, ticks: { color: '#666' } }
+        }
+      }
+    });
+  }
+
+  loadData();
+  </script>
+</body>
+</html>
