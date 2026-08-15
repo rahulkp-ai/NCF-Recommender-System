@@ -1,0 +1,17 @@
+{
+  "_comment": "Hyperparameters reconstructed from production/recommenders/ncf/model.py defaults and meta.json. This is a snapshot for reference, not regenerated automatically yet — scripts/export_model.py (planned, see ROADMAP.md) will write this file directly from the training run in a future promotion.",
+  "architecture": "PyTorchNCF (MLP-NCF)",
+  "embedding_dim": 32,
+  "hidden_layers": [64, 32],
+  "activation": "ReLU",
+  "output_activation": "sigmoid",
+  "dataset": "MovieLens-1M",
+  "loss_function": "BCE (binary cross-entropy)",
+  "evaluation_metrics": ["Hit@10", "NDCG@10", "BCE Loss"],
+  "artifact_files": {
+    "weights": "production_model.pt",
+    "metadata": "meta.json",
+    "popularity_engine": "pop_engine.pkl",
+    "content_engine": "content_engine.pkl"
+  }
+}
