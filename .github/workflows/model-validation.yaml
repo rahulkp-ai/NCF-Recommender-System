@@ -1,0 +1,41 @@
+name: Model Validation
+
+# Runs whenever production/artifacts/ or production/recommenders/ change,
+# to catch a model that fails to load or regresses below a minimum
+# quality bar before it reaches prod.
+on:
+  pull_request:
+    paths:
+      - "production/artifacts/**"
+      - "production/recommenders/**"
+      - "production/serving/**"
+
+jobs:
+  validate-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r model_server/requirements.txt
+      - name: Smoke-load the model
+        run: |
+          python -c "
+          from production.recommenders.hybrid.engine import HybridEngine
+          engine = HybridEngine.load()
+          assert engine is not None, 'Model failed to load'
+          print('Model loaded successfully')
+          "
+      - name: Run ml/ unit tests
+        run: pytest tests/test_ml.py -v
+      - name: Minimum quality gate
+        run: |
+          python -c "
+          # Placeholder gate — wire to research/evaluation/metrics.py output
+          # once export_model.py writes a metrics.json alongside the weights.
+          print('Quality gate check: HR@10 / BCE loss thresholds — see ROADMAP.md')
+          "

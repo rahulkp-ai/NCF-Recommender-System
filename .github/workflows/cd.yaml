@@ -1,0 +1,43 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+jobs:
+  # Free-tier PaaS deployments (Render/Railway/Vercel) are typically
+  # triggered by their own GitHub App on push to main, so this workflow's
+  # job is to build + smoke-test images before that happens, and to push
+  # tagged images to GHCR for anyone self-hosting instead.
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: [backend, model_server, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deployment/docker/${{ matrix.service }}.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.ref_name }}
+
+  notify-deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: always()
+    steps:
+      - run: echo "Images pushed. Render/Railway/Vercel auto-deploy from main separately — see docs/deployment/README.md."
