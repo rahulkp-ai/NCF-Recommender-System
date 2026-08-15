@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Virtualenv
+venv/
+env/
+.venv/
+
+# Node (frontend has its own build context/Dockerfile — see
+# production/frontend/.dockerignore — but excluded here too since
+# backend/model_server build with context: . at the repo root)
+production/frontend/node_modules/
+production/frontend/.next/
+
+# Tests/CI
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Git
+.git/
+.gitignore

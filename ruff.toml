@@ -1,0 +1,13 @@
+# Standalone ruff config (mirrors [tool.ruff] in pyproject.toml for tools
+# that only look for ruff.toml). Keep the two in sync.
+line-length = 100
+target-version = "py311"
+src = ["production/backend", "production/recommenders", "production/serving", "production/frontend", "production/gateway-optional", "research"]
+exclude = ["research/notebooks", "thesis", "ieee", "production/artifacts", "research/datasets"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["E501"]
+
+[format]
+quote-style = "double"

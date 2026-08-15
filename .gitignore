@@ -1,0 +1,76 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+
+# ── Virtual environments ──────────────────────────────────
+venv/
+env/
+.venv/
+.env.local
+ENV/
+
+# ── Environment files ─────────────────────────────────────
+.env
+# Keep examples
+!.env.example
+!production/frontend/.env.local.example
+
+# ── Node / Next.js ────────────────────────────────────────
+node_modules/
+production/frontend/.next/
+production/frontend/out/
+production/frontend/.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Docker ────────────────────────────────────────────────
+
+# ── Database ──────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+
+# ── ML / Data ─────────────────────────────────────────────
+# Keep processed artifacts and raw data (needed for seeding)
+# Ignore large model outputs you'd retrain
+mlruns/
+mlflow.db
+*.ckpt
+
+# ── Testing ───────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+test-results/
+*.xml
+
+# ── IDE / OS ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ── Logs ─────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Misc ─────────────────────────────────────────────────
+.cache/
+.mypy_cache/
+.ruff_cache/
+*.bak
+*.tmp

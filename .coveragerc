@@ -1,0 +1,14 @@
+[run]
+branch = True
+source = backend,ml,model_server
+omit =
+    */tests/*
+    */research/*
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+show_missing = True

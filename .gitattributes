@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.pt binary
+*.pkl binary
+*.npy binary
+*.ico binary
+
+*.ipynb -diff
+*.ipynb linguist-generated
+
+docs/* linguist-documentation
+thesis/* linguist-documentation
+ieee/* linguist-documentation
