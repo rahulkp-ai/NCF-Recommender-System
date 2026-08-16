@@ -2,7 +2,6 @@
 production/serving/app/inference.py
 Pure inference helpers — no HTTP, no DB.
 """
-import numpy as np
 
 
 def run_inference(engine, user_id: int, seen_items: list[int], k: int = 10) -> list[dict]:

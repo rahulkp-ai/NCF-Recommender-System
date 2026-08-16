@@ -6,6 +6,7 @@ Split out of ml/models/ncf/cold_start.py in Phase 4 (see
 docs/decisions/0003-recommenders-serving-rename.md). PopularityEngine
 logic below is unchanged, verbatim from the original file.
 """
+
 import numpy as np
 import pandas as pd
 
@@ -25,8 +26,7 @@ class PopularityEngine:
         counts = interactions_df[id_col].value_counts()
         max_count = float(counts.max())
         self._scores = {
-            int(iid): float(np.log1p(cnt) / np.log1p(max_count))
-            for iid, cnt in counts.items()
+            int(iid): float(np.log1p(cnt) / np.log1p(max_count)) for iid, cnt in counts.items()
         }
         self._sorted = sorted(self._scores, key=self._scores.get, reverse=True)
         return self
@@ -43,4 +43,3 @@ class PopularityEngine:
             if len(result) >= k:
                 break
         return result
-

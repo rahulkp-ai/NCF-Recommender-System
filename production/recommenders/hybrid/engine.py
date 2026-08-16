@@ -11,22 +11,22 @@ artifacts (saved against the historical `hybrid.cold_start` module path)
 still deserialize correctly after that split. All algorithm logic below
 is unchanged from the original file.
 """
+
 import json
 import pickle
 import sys
 import types
-import numpy as np
-import torch
 from pathlib import Path
 
-from ..ncf.model import PyTorchNCF, get_device
-from ..popularity.engine import PopularityEngine
-from ..content.engine import ContentEngine
+import numpy as np
+import torch
 
-N_WARMUP      = 20
+from ..ncf.model import PyTorchNCF, get_device
+
+N_WARMUP = 20
 TOP_K_DEFAULT = 10
-W_POPULARITY  = 0.6
-W_CONTENT     = 0.4
+W_POPULARITY = 0.6
+W_CONTENT = 0.4
 
 
 def _register_pickle_shim():
@@ -45,13 +45,12 @@ def _register_pickle_shim():
 
 
 class HybridEngine:
-
     def __init__(self, ncf_model, pop_engine, content_engine, n_items):
-        self.ncf     = ncf_model
-        self.pop     = pop_engine
+        self.ncf = ncf_model
+        self.pop = pop_engine
         self.content = content_engine
         self.n_items = n_items
-        self.device  = get_device()
+        self.device = get_device()
         self.ncf.to(self.device)
         self.ncf.eval()
 
@@ -63,9 +62,15 @@ class HybridEngine:
         # root (3 levels) as the original ml/models/ncf/hybrid_engine.py
         # was. Verified, not assumed — see docs/decisions/0003.
 
-        weights_path = Path(weights_path) if weights_path else root / "production" / "artifacts" / "production_model.pt"
-        meta_path    = Path(meta_path)    if meta_path    else root / "production" / "artifacts" / "meta.json"
-        pop_path     = root / "production" / "artifacts" / "pop_engine.pkl"
+        weights_path = (
+            Path(weights_path)
+            if weights_path
+            else root / "production" / "artifacts" / "production_model.pt"
+        )
+        meta_path = (
+            Path(meta_path) if meta_path else root / "production" / "artifacts" / "meta.json"
+        )
+        pop_path = root / "production" / "artifacts" / "pop_engine.pkl"
         content_path = root / "production" / "artifacts" / "content_engine.pkl"
 
         if not meta_path.exists():
@@ -78,14 +83,16 @@ class HybridEngine:
         n_users, n_items = meta["n_users"], meta["n_items"]
 
         device = get_device()
-        model  = PyTorchNCF(n_users, n_items, emb_dim=32, hidden=[64, 32])
+        model = PyTorchNCF(n_users, n_items, emb_dim=32, hidden=[64, 32])
         model.load_state_dict(torch.load(weights_path, map_location=device))
 
         # Register shim immediately before unpickling
         _register_pickle_shim()
 
-        with open(pop_path,     "rb") as f: pop     = pickle.load(f)
-        with open(content_path, "rb") as f: content = pickle.load(f)
+        with open(pop_path, "rb") as f:
+            pop = pickle.load(f)
+        with open(content_path, "rb") as f:
+            content = pickle.load(f)
 
         return cls(model, pop, content, n_items)
 
@@ -101,21 +108,23 @@ class HybridEngine:
 
     def _cold_scores(self, seen_items, candidates):
         profile = self.content.user_profile(seen_items)
-        scores  = np.zeros(len(candidates))
+        scores = np.zeros(len(candidates))
         for idx, item_id in enumerate(candidates):
-            pop_s  = self.pop.score(item_id)
+            pop_s = self.pop.score(item_id)
             cont_s = self.content.score(profile, item_id) if profile is not None else 0.0
             scores[idx] = W_POPULARITY * pop_s + W_CONTENT * cont_s
         return scores
 
     def recommend(self, user_id, seen_items, k=TOP_K_DEFAULT, n_candidates=200):
         seen = set(seen_items)
-        a    = self.alpha(len(seen_items))
-        b    = 1.0 - a
+        a = self.alpha(len(seen_items))
+        b = 1.0 - a
 
-        candidates  = self.pop.top_k(n_candidates, exclude=seen)
-        ncf_scores  = self._ncf_scores(user_id, candidates)  if a > 0 else np.zeros(len(candidates))
-        cold_scores = self._cold_scores(seen_items, candidates) if b > 0 else np.zeros(len(candidates))
+        candidates = self.pop.top_k(n_candidates, exclude=seen)
+        ncf_scores = self._ncf_scores(user_id, candidates) if a > 0 else np.zeros(len(candidates))
+        cold_scores = (
+            self._cold_scores(seen_items, candidates) if b > 0 else np.zeros(len(candidates))
+        )
 
         def norm(x):
             rng = x.max() - x.min()
@@ -123,10 +132,14 @@ class HybridEngine:
 
         final_scores = a * norm(ncf_scores) + b * norm(cold_scores)
         top_idx = np.argsort(-final_scores)[:k]
-        source  = "ncf" if a >= 0.8 else ("blend" if a > 0.2 else "cold_start")
+        source = "ncf" if a >= 0.8 else ("blend" if a > 0.2 else "cold_start")
 
         return [
-            {"item_id": candidates[idx], "score": round(float(final_scores[idx]), 4),
-             "source": source, "alpha": round(a, 2)}
+            {
+                "item_id": candidates[idx],
+                "score": round(float(final_scores[idx]), 4),
+                "source": source,
+                "alpha": round(a, 2),
+            }
             for idx in top_idx
         ]

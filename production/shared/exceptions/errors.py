@@ -11,6 +11,7 @@ Usage:
     from production.shared.exceptions.errors import NotFoundError
     raise NotFoundError("Movie", movie_id)
 """
+
 from __future__ import annotations
 
 
@@ -36,7 +37,10 @@ class NotFoundError(AppError):
     error_code = "not_found"
 
     def __init__(self, resource: str, identifier):
-        super().__init__(f"{resource} not found: {identifier}", details={"resource": resource, "id": str(identifier)})
+        super().__init__(
+            f"{resource} not found: {identifier}",
+            details={"resource": resource, "id": str(identifier)},
+        )
 
 
 class ValidationError(AppError):

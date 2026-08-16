@@ -1,9 +1,10 @@
 """
 production/backend/app/main.py
 """
+
 import sys
-from pathlib import Path
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,13 +21,14 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from production.observability.metrics import instrument_app
+from production.shared.exceptions.errors import AppError
+
+from .api.v1 import auth, interaction, recommend, search, users
 from .core.config import CORS_ORIGINS
-from .core.logging import setup_logging, logger
+from .core.logging import logger, setup_logging
 from .db.seed import run_seed
 from .services.recommendation_service import RecommendationService
-from .api.v1 import auth, users, recommend, search, interaction
-from production.shared.exceptions.errors import AppError
-from production.observability.metrics import instrument_app
 
 setup_logging()
 

@@ -2,11 +2,12 @@
 production/backend/app/api/v1/users.py
 GET /api/v1/users/profile  — returns current user profile
 """
+
 from fastapi import APIRouter, Depends
 
-from ..deps import get_current_user
 from ...db.models import User
 from ...schemas.user import UserOut
+from ..deps import get_current_user
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 

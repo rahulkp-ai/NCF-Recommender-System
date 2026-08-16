@@ -16,7 +16,8 @@ can still resolve `hybrid.cold_start.PopularityEngine` /
 `hybrid.cold_start.ContentEngine` for existing .pkl artifacts without
 requiring a re-train.
 """
-from ..popularity.engine import PopularityEngine
+
 from ..content.engine import ContentEngine
+from ..popularity.engine import PopularityEngine
 
 __all__ = ["PopularityEngine", "ContentEngine"]

@@ -1,15 +1,16 @@
 """backend/app/schemas/user.py"""
-from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+
 import re
+
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class UserRegister(BaseModel):
     username: str
     email: EmailStr
     password: str
-    age_group: Optional[str] = None
-    gender: Optional[str] = None
+    age_group: str | None = None
+    gender: str | None = None
 
     @field_validator("username")
     @classmethod
@@ -36,8 +37,8 @@ class UserOut(BaseModel):
     id: int
     username: str
     email: str
-    age_group: Optional[str] = None
-    gender: Optional[str] = None
+    age_group: str | None = None
+    gender: str | None = None
 
     model_config = {"from_attributes": True}
 

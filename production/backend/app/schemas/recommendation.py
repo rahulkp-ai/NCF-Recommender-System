@@ -1,5 +1,5 @@
 """backend/app/schemas/recommendation.py"""
-from typing import Optional, List
+
 from pydantic import BaseModel
 
 
@@ -8,10 +8,10 @@ class RecommendedMovie(BaseModel):
     score: float
     source: str
     alpha: float
-    title: Optional[str] = None
-    genres: Optional[str] = None
-    poster_url: Optional[str] = None
-    year: Optional[int] = None
+    title: str | None = None
+    genres: str | None = None
+    poster_url: str | None = None
+    year: int | None = None
 
 
 class RecommendationResponse(BaseModel):
@@ -19,9 +19,9 @@ class RecommendationResponse(BaseModel):
     n_interactions: int
     alpha: float
     strategy: str
-    recommendations: List[RecommendedMovie]
+    recommendations: list[RecommendedMovie]
 
 
 class HomepageResponse(BaseModel):
     strategy: str
-    recommendations: List[RecommendedMovie]
+    recommendations: list[RecommendedMovie]

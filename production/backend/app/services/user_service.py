@@ -2,16 +2,16 @@
 production/backend/app/services/user_service.py
 Business logic for user registration and authentication.
 """
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..core.security import hash_password, verify_password, create_access_token
+from ..core.security import create_access_token, hash_password, verify_password
 from ..db.repository import UserRepository
-from ..schemas.user import UserRegister, UserLogin, UserOut, TokenOut
+from ..schemas.user import TokenOut, UserLogin, UserOut, UserRegister
 
 
 class UserService:
-
     @staticmethod
     def register(db: Session, payload: UserRegister) -> TokenOut:
         if UserRepository.get_by_username(db, payload.username):

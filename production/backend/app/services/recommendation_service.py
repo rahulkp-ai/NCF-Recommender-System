@@ -2,7 +2,7 @@
 production/backend/app/services/recommendation_service.py
 Wraps HybridEngine; bridges ML model and the database.
 """
-from pathlib import Path
+
 from sqlalchemy.orm import Session
 
 from ..core.logging import logger
@@ -18,6 +18,7 @@ class RecommendationService:
     @classmethod
     def load(cls) -> "RecommendationService":
         from production.recommenders.hybrid.engine import HybridEngine
+
         try:
             engine = HybridEngine.load()
         except Exception:
@@ -33,8 +34,8 @@ class RecommendationService:
 
     def recommend_for_user(self, user_id: int, db: Session, k: int = 10) -> dict:
         seen_items = InteractionRepository.get_user_movie_ids(db, user_id)
-        n_seen     = len(seen_items)
-        alpha      = self.engine.alpha(n_seen)
+        n_seen = len(seen_items)
+        alpha = self.engine.alpha(n_seen)
 
         recs = self.engine.recommend(user_id=user_id, seen_items=seen_items, k=k)
         enriched = self._enrich(recs, db)
@@ -73,17 +74,19 @@ class RecommendationService:
     def _enrich(self, recs: list, db: Session) -> list:
         if not recs:
             return recs
-        item_ids  = [r["item_id"] for r in recs]
-        movies    = MovieRepository.get_many(db, item_ids)
+        item_ids = [r["item_id"] for r in recs]
+        movies = MovieRepository.get_many(db, item_ids)
         movie_map = {m.id: m for m in movies}
-        enriched  = []
+        enriched = []
         for r in recs:
             movie = movie_map.get(r["item_id"])
-            enriched.append({
-                **r,
-                "title":      movie.title      if movie else "Unknown",
-                "genres":     movie.genres     if movie else "",
-                "poster_url": movie.poster_url if movie else None,
-                "year":       movie.year       if movie else None,
-            })
+            enriched.append(
+                {
+                    **r,
+                    "title": movie.title if movie else "Unknown",
+                    "genres": movie.genres if movie else "",
+                    "poster_url": movie.poster_url if movie else None,
+                    "year": movie.year if movie else None,
+                }
+            )
         return enriched

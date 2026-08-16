@@ -5,16 +5,17 @@ Title search with hybrid recommendation fallback.
 """
 
 from sqlalchemy.orm import Session
+
 from .hybrid_engine import HybridEngine
 
 
 def search_and_recommend(
-    query:      str,
-    user_id:    int,
+    query: str,
+    user_id: int,
     seen_items: list[int],
-    engine:     HybridEngine,
-    db:         Session,
-    k:          int = 10,
+    engine: HybridEngine,
+    db: Session,
+    k: int = 10,
 ) -> dict:
     """
     Search for movies by title. Returns matched movies plus recommendations.
@@ -28,24 +29,16 @@ def search_and_recommend(
     from backend.app.db.models import Movie
 
     # ── Search DB ─────────────────────────────────────────────────────────────
-    matches = (
-        db.query(Movie)
-        .filter(Movie.title.ilike(f"%{query}%"))
-        .limit(5)
-        .all()
-    )
+    matches = db.query(Movie).filter(Movie.title.ilike(f"%{query}%")).limit(5).all()
 
     if matches:
         # Branch A: found — add hybrid "you may also like"
         match_ids = [m.id for m in matches]
-        recommendations = engine.recommend(
-            user_id=user_id, seen_items=seen_items + match_ids, k=k
-        )
+        recommendations = engine.recommend(user_id=user_id, seen_items=seen_items + match_ids, k=k)
         return {
-            "branch":          "found",
-            "query":           query,
-            "matched_movies":  [{"id": m.id, "title": m.title,
-                                 "genres": m.genres} for m in matches],
+            "branch": "found",
+            "query": query,
+            "matched_movies": [{"id": m.id, "title": m.title, "genres": m.genres} for m in matches],
             "recommendations": recommendations,
         }
     else:
@@ -70,14 +63,13 @@ def search_and_recommend(
         if not fallback_recs:
             # Last resort: pure popularity
             fallback_recs = [
-                {"item_id": iid, "score": engine.pop.score(iid),
-                 "source": "popularity_fallback"}
+                {"item_id": iid, "score": engine.pop.score(iid), "source": "popularity_fallback"}
                 for iid in engine.pop.top_k(k)
             ]
 
         return {
-            "branch":          "not_found",
-            "query":           query,
-            "matched_movies":  [],
+            "branch": "not_found",
+            "query": query,
+            "matched_movies": [],
             "recommendations": fallback_recs,
         }

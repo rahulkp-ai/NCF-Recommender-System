@@ -9,6 +9,7 @@ to compute weight gradients during backward pass.
 
 import numpy as np
 
+
 class LinearLayer:
     """
     Fully-connected layer: z = W @ x + b
@@ -32,8 +33,8 @@ class LinearLayer:
 
         # He initialisation: std = sqrt(2 / in_features)
         std = np.sqrt(2.0 / in_features)
-        self.W  = rng.normal(0.0, std, (out_features, in_features))
-        self.b  = np.zeros(out_features)
+        self.W = rng.normal(0.0, std, (out_features, in_features))
+        self.b = np.zeros(out_features)
 
         self.dW = np.zeros_like(self.W)
         self.db = np.zeros_like(self.b)
@@ -47,8 +48,8 @@ class LinearLayer:
         """
         z = W @ x + b
         """
-        self._x = x.copy()                  # cache for backward
-        return self.W @ x + self.b          # shape (out_features,)
+        self._x = x.copy()  # cache for backward
+        return self.W @ x + self.b  # shape (out_features,)
 
     # ── Backward ─────────────────────────────────────────────────────────────
 
@@ -60,14 +61,14 @@ class LinearLayer:
           dL/dx = W^T @ delta   (passed to previous layer)
         """
         assert self._x is not None, "Call forward() before backward()"
-        
+
         # Ensure delta is at least 1D (handles scalar inputs from output layer)
         delta = np.atleast_1d(delta)
 
         # Accumulate parameter gradients
         # np.outer handles (out,) and (in,) to create (out, in) matrix
         grad_w = np.outer(delta, self._x)
-        
+
         if self.dW.shape != grad_w.shape:
             raise ValueError(
                 f"Shape mismatch: dW is {self.dW.shape}, grad is {grad_w.shape}. "
@@ -78,7 +79,7 @@ class LinearLayer:
         self.db += delta
 
         # Gradient to pass to previous layer
-        dx = self.W.T @ delta                 # (in_features,)
+        dx = self.W.T @ delta  # (in_features,)
         return dx
 
     def zero_grad(self) -> None:
@@ -87,11 +88,11 @@ class LinearLayer:
         self._x = None
 
     def __repr__(self):
-        return (f"LinearLayer(in={self.W.shape[1]}, "
-                f"out={self.W.shape[0]})")
+        return f"LinearLayer(in={self.W.shape[1]}, out={self.W.shape[0]})"
 
 
 # ── Activation functions ──────────────────────────────────────────────────────
+
 
 class ReLU:
     """

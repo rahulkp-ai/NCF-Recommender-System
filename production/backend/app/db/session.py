@@ -2,7 +2,9 @@
 production/backend/app/db/session.py
 FastAPI dependency that yields a DB session and closes it after request.
 """
-from typing import Generator
+
+from collections.abc import Generator
+
 from .connection import SessionLocal
 
 

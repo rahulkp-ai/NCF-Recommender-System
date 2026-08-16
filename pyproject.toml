@@ -51,3 +51,11 @@ omit = ["*/tests/*", "*/research/*", "*/__init__.py"]
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+"production/backend/app/main.py" = ["E402"]
+"production/serving/app/main.py" = ["E402"]
+"production/tests/unit/test_metrics.py" = ["E402"]

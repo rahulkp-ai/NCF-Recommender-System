@@ -4,23 +4,23 @@ production/serving/app/routes.py
 /batch     — multi-user batch inference
 /health    — liveness check
 """
-from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
 
-from .inference import run_inference, batch_inference
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
+
+from .inference import batch_inference, run_inference
 
 router = APIRouter()
 
 
 class PredictRequest(BaseModel):
     user_id: int
-    seen_items: Optional[List[int]] = []
-    k: Optional[int] = 10
+    seen_items: list[int] | None = []
+    k: int | None = 10
 
 
 class BatchPredictRequest(BaseModel):
-    requests: List[PredictRequest]
+    requests: list[PredictRequest]
 
 
 @router.post("/predict")
@@ -30,7 +30,7 @@ def predict(payload: PredictRequest, request: Request):
         results = run_inference(engine, payload.user_id, payload.seen_items, payload.k)
         return {"user_id": payload.user_id, "recommendations": results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/batch")

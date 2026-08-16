@@ -3,9 +3,10 @@ production/serving/app/main.py
 Standalone FastAPI service for NCF inference.
 Runs on port 8001; backend communicates via HTTP.
 """
+
 import sys
-from pathlib import Path
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 # NOTE: this file moved from model_server/app/main.py to
 # production/serving/app/main.py in Phase 4 — one directory deeper than
@@ -20,10 +21,11 @@ if str(ROOT) not in sys.path:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .loader import load_hybrid_engine
-from .routes import router
 from production.observability.logging import configure_logging
 from production.observability.metrics import instrument_app
+
+from .loader import load_hybrid_engine
+from .routes import router
 
 logger = configure_logging("ncf_model_server")
 

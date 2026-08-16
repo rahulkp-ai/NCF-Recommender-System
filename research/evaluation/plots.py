@@ -4,33 +4,35 @@ research/evaluation/plots.py
 """
 
 import json
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from pathlib import Path
 
+import matplotlib
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+
 # Set global plotting style
-matplotlib.rcParams.update({
-    "font.family":      "sans-serif",
-    "font.size":        11,
-    "axes.spines.top":  False,
-    "axes.spines.right":False,
-    "axes.grid":        True,
-    "grid.alpha":       0.3,
-    "grid.linewidth":   0.5,
-    "figure.dpi":       150,
-})
+matplotlib.rcParams.update(
+    {
+        "font.family": "sans-serif",
+        "font.size": 11,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.alpha": 0.3,
+        "grid.linewidth": 0.5,
+        "figure.dpi": 150,
+    }
+)
 
 # --- PATH CONFIGURATION ---
 # Points to research/evaluation
-LOG_DIR = Path(__file__).parent 
+LOG_DIR = Path(__file__).parent
 # Points to research/evaluation/figures
 FIG_DIR = LOG_DIR / "figures" / "paper"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 CORAL = "#D85A30"
-TEAL  = "#1D9E75"
+TEAL = "#1D9E75"
 
 
 def _load():
@@ -41,32 +43,33 @@ def _load():
         # Try to import and run comparison if it exists in the same folder
         try:
             from research.evaluation.compare import save_comparison
+
             save_comparison()
         except ImportError:
-            raise FileNotFoundError("comparison.json not found and compare.py could not be automated.")
-            
+            raise FileNotFoundError(
+                "comparison.json not found and compare.py could not be automated."
+            ) from None
+
     with open(path) as f:
         return json.load(f)
 
 
 # ── Figure 1: Loss convergence comparison ────────────────────────────────────
 
+
 def plot_loss_curves(data: dict = None):
     if data is None:
         data = _load()
 
-    epochs  = data["epochs"]
-    s_loss  = data["scratch"]["loss"]
-    p_loss  = data["pytorch"]["loss"]
+    epochs = data["epochs"]
+    s_loss = data["scratch"]["loss"]
+    p_loss = data["pytorch"]["loss"]
 
     fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(epochs, s_loss, color=CORAL, lw=2,
-            label="Scratch NCF (NumPy)", zorder=3)
-    ax.plot(epochs, p_loss, color=TEAL,  lw=2,
-            label="PyTorch NCF (MPS)",  zorder=3)
+    ax.plot(epochs, s_loss, color=CORAL, lw=2, label="Scratch NCF (NumPy)", zorder=3)
+    ax.plot(epochs, p_loss, color=TEAL, lw=2, label="PyTorch NCF (MPS)", zorder=3)
 
-    ax.axhline(0.693, color="gray", lw=0.8, ls="--", alpha=0.5,
-               label="Random baseline (0.693)")
+    ax.axhline(0.693, color="gray", lw=0.8, ls="--", alpha=0.5, label="Random baseline (0.693)")
 
     ax.set_xlabel("Epoch")
     ax.set_ylabel("BCE Loss")
@@ -80,20 +83,21 @@ def plot_loss_curves(data: dict = None):
         f"Δ = {delta:.4f}",
         xy=(epochs[-1], (s_loss[-1] + p_loss[-1]) / 2),
         xytext=(epochs[-1] - 4, (s_loss[-1] + p_loss[-1]) / 2 + 0.015),
-        fontsize=9, color="gray",
-        arrowprops=dict(arrowstyle="->", color="gray", lw=0.8),
+        fontsize=9,
+        color="gray",
+        arrowprops={"arrowstyle": "->", "color": "gray", "lw": 0.8},
     )
 
     plt.tight_layout()
     for ext in ["png", "pdf"]:
-        fig.savefig(FIG_DIR / f"fig1_loss_curves.{ext}",
-                    dpi=300, bbox_inches="tight")
+        fig.savefig(FIG_DIR / f"fig1_loss_curves.{ext}", dpi=300, bbox_inches="tight")
     plt.show()
     print(f"Saved: {FIG_DIR}/fig1_loss_curves.png/pdf")
     return fig
 
 
 # ── Figure 2: Hit@10 over epochs ─────────────────────────────────────────────
+
 
 def plot_hit_curves(data: dict = None):
     if data is None:
@@ -102,14 +106,12 @@ def plot_hit_curves(data: dict = None):
     s_pairs = data["scratch"]["hit_at_10"]
     p_pairs = data["pytorch"]["hit_at_10"]
 
-    s_ep, s_hit = zip(*s_pairs) if s_pairs else ([], [])
-    p_ep, p_hit = zip(*p_pairs) if p_pairs else ([], [])
+    s_ep, s_hit = zip(*s_pairs, strict=False) if s_pairs else ([], [])
+    p_ep, p_hit = zip(*p_pairs, strict=False) if p_pairs else ([], [])
 
     fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(s_ep, s_hit, color=CORAL, lw=2, marker="o", ms=4,
-            label="Scratch NCF")
-    ax.plot(p_ep, p_hit, color=TEAL,  lw=2, marker="s", ms=4,
-            label="PyTorch NCF")
+    ax.plot(s_ep, s_hit, color=CORAL, lw=2, marker="o", ms=4, label="Scratch NCF")
+    ax.plot(p_ep, p_hit, color=TEAL, lw=2, marker="s", ms=4, label="PyTorch NCF")
 
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Hit@10")
@@ -126,14 +128,14 @@ def plot_hit_curves(data: dict = None):
 
     plt.tight_layout()
     for ext in ["png", "pdf"]:
-        fig.savefig(FIG_DIR / f"fig2_hit_curves.{ext}",
-                    dpi=300, bbox_inches="tight")
+        fig.savefig(FIG_DIR / f"fig2_hit_curves.{ext}", dpi=300, bbox_inches="tight")
     plt.show()
     print(f"Saved: {FIG_DIR}/fig2_hit_curves.png/pdf")
     return fig
 
 
 # ── Figure 3: Training time comparison ───────────────────────────────────────
+
 
 def plot_time_comparison(data: dict = None):
     if data is None:
@@ -150,30 +152,35 @@ def plot_time_comparison(data: dict = None):
     bars = ax.bar(
         ["Scratch NCF\n(NumPy)", "PyTorch NCF\n(MPS)"],
         [s_total, p_total],
-        color=[CORAL, TEAL], width=0.5, zorder=3
+        color=[CORAL, TEAL],
+        width=0.5,
+        zorder=3,
     )
     ax.set_ylabel("Total training time (seconds)")
     ax.set_title(f"Training Efficiency ({speedup}× speedup)")
-    for bar, val in zip(bars, [s_total, p_total]):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 5,
-                f"{val:.0f}s", ha="center", fontsize=11, fontweight="bold")
+    for bar, val in zip(bars, [s_total, p_total], strict=False):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 5,
+            f"{val:.0f}s",
+            ha="center",
+            fontsize=11,
+            fontweight="bold",
+        )
 
     # Right: per-epoch time line
     ax2 = axes[1]
     epochs = data["epochs"]
-    ax2.plot(epochs, data["scratch"]["time_per_epoch"],
-             color=CORAL, lw=1.5, label="Scratch")
-    ax2.plot(epochs, data["pytorch"]["time_per_epoch"],
-             color=TEAL,  lw=1.5, label="PyTorch")
-    ax2.set_xlabel("Epoch"); ax2.set_ylabel("Time (seconds)")
+    ax2.plot(epochs, data["scratch"]["time_per_epoch"], color=CORAL, lw=1.5, label="Scratch")
+    ax2.plot(epochs, data["pytorch"]["time_per_epoch"], color=TEAL, lw=1.5, label="PyTorch")
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Time (seconds)")
     ax2.set_title("Per-Epoch Training Time")
     ax2.legend(frameon=False)
 
     plt.tight_layout()
     for ext in ["png", "pdf"]:
-        fig.savefig(FIG_DIR / f"fig3_time_comparison.{ext}",
-                    dpi=300, bbox_inches="tight")
+        fig.savefig(FIG_DIR / f"fig3_time_comparison.{ext}", dpi=300, bbox_inches="tight")
     plt.show()
     print(f"Saved: {FIG_DIR}/fig3_time_comparison.png/pdf")
     return fig
@@ -181,69 +188,78 @@ def plot_time_comparison(data: dict = None):
 
 # ── Figure 4: Four-panel summary (thesis page) ───────────────────────────────
 
+
 def plot_thesis_summary(data: dict = None):
     if data is None:
         data = _load()
 
     fig = plt.figure(figsize=(12, 8))
-    gs  = gridspec.GridSpec(2, 2, figure=fig, hspace=0.38, wspace=0.32)
+    gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.38, wspace=0.32)
 
-    epochs  = data["epochs"]
-    s_loss  = data["scratch"]["loss"]
-    p_loss  = data["pytorch"]["loss"]
+    epochs = data["epochs"]
+    s_loss = data["scratch"]["loss"]
+    p_loss = data["pytorch"]["loss"]
 
     # Panel A: Loss curves
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.plot(epochs, s_loss, color=CORAL, lw=2, label="Scratch")
-    ax1.plot(epochs, p_loss, color=TEAL,  lw=2, label="PyTorch")
+    ax1.plot(epochs, p_loss, color=TEAL, lw=2, label="PyTorch")
     ax1.axhline(0.693, color="gray", lw=0.8, ls="--", alpha=0.4)
-    ax1.set_title("(A) Loss convergence"); ax1.set_xlabel("Epoch")
-    ax1.set_ylabel("BCE Loss"); ax1.legend(frameon=False, fontsize=9)
+    ax1.set_title("(A) Loss convergence")
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("BCE Loss")
+    ax1.legend(frameon=False, fontsize=9)
 
     # Panel B: Hit@10
     ax2 = fig.add_subplot(gs[0, 1])
     for key, col, mk in [("scratch", CORAL, "o"), ("pytorch", TEAL, "s")]:
         pairs = data[key]["hit_at_10"]
         if pairs:
-            ep, hit = zip(*pairs)
-            ax2.plot(ep, hit, color=col, lw=2, marker=mk, ms=4,
-                     label=key.capitalize())
-    ax2.set_title("(B) Hit@10"); ax2.set_xlabel("Epoch")
-    ax2.set_ylabel("Hit@10"); ax2.legend(frameon=False, fontsize=9)
+            ep, hit = zip(*pairs, strict=False)
+            ax2.plot(ep, hit, color=col, lw=2, marker=mk, ms=4, label=key.capitalize())
+    ax2.set_title("(B) Hit@10")
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Hit@10")
+    ax2.legend(frameon=False, fontsize=9)
 
     # Panel C: Speedup per epoch
     ax3 = fig.add_subplot(gs[1, 0])
     speedup = [x for x in data["comparison"]["speedup_per_epoch"] if x]
-    ax3.bar(range(1, len(speedup)+1), speedup,
-            color=TEAL, alpha=0.8, zorder=3)
+    ax3.bar(range(1, len(speedup) + 1), speedup, color=TEAL, alpha=0.8, zorder=3)
     avg = data["comparison"]["avg_speedup"]
-    ax3.axhline(avg, color=CORAL, lw=1.5, ls="--",
-                label=f"Mean {avg}×")
-    ax3.set_title("(C) Per-epoch speedup"); ax3.set_xlabel("Epoch")
-    ax3.set_ylabel("Speedup (×)"); ax3.legend(frameon=False, fontsize=9)
+    ax3.axhline(avg, color=CORAL, lw=1.5, ls="--", label=f"Mean {avg}×")
+    ax3.set_title("(C) Per-epoch speedup")
+    ax3.set_xlabel("Epoch")
+    ax3.set_ylabel("Speedup (×)")
+    ax3.legend(frameon=False, fontsize=9)
 
     # Panel D: Summary metrics table
     ax4 = fig.add_subplot(gs[1, 1])
     ax4.axis("off")
     c = data["comparison"]
     rows = [
-        ["Metric",                "Scratch",    "PyTorch",  "Delta"],
-        ["Final loss",
-         f"{data['scratch']['loss'][-1]:.4f}",
-         f"{data['pytorch']['loss'][-1]:.4f}",
-         str(c["final_loss_delta"])],
-        ["Best Hit@10",
-         f"{data['scratch']['best_hit']:.4f}",
-         f"{data['pytorch']['best_hit']:.4f}",
-         str(c["best_hit_delta"])],
-        ["Total time (s)",
-         f"{data['scratch']['total_time']:.1f}",
-         f"{data['pytorch']['total_time']:.1f}",
-         f"{c['total_speedup']}×"],
+        ["Metric", "Scratch", "PyTorch", "Delta"],
+        [
+            "Final loss",
+            f"{data['scratch']['loss'][-1]:.4f}",
+            f"{data['pytorch']['loss'][-1]:.4f}",
+            str(c["final_loss_delta"]),
+        ],
+        [
+            "Best Hit@10",
+            f"{data['scratch']['best_hit']:.4f}",
+            f"{data['pytorch']['best_hit']:.4f}",
+            str(c["best_hit_delta"]),
+        ],
+        [
+            "Total time (s)",
+            f"{data['scratch']['total_time']:.1f}",
+            f"{data['pytorch']['total_time']:.1f}",
+            f"{c['total_speedup']}×",
+        ],
         ["Avg speedup", "—", "—", f"{c['avg_speedup']}×"],
     ]
-    tbl = ax4.table(cellText=rows[1:], colLabels=rows[0],
-                    loc="center", cellLoc="center")
+    tbl = ax4.table(cellText=rows[1:], colLabels=rows[0], loc="center", cellLoc="center")
     tbl.auto_set_font_size(False)
     tbl.set_fontsize(9)
     tbl.scale(1, 1.6)
@@ -251,12 +267,13 @@ def plot_thesis_summary(data: dict = None):
 
     fig.suptitle(
         "NCF Benchmark: Scratch (NumPy) vs PyTorch Implementation",
-        fontsize=13, fontweight="bold", y=1.01
+        fontsize=13,
+        fontweight="bold",
+        y=1.01,
     )
     plt.tight_layout()
     for ext in ["png", "pdf"]:
-        fig.savefig(FIG_DIR / f"fig4_thesis_summary.{ext}",
-                    dpi=300, bbox_inches="tight")
+        fig.savefig(FIG_DIR / f"fig4_thesis_summary.{ext}", dpi=300, bbox_inches="tight")
     plt.show()
     print(f"Saved: {FIG_DIR}/fig4_thesis_summary.png/pdf")
     return fig

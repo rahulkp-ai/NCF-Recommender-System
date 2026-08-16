@@ -12,21 +12,29 @@ Run: pytest production/tests/integration/test_error_handling.py -v
 (requires `docker compose up db` or an equivalent local Postgres —
 same requirement as production/tests/unit/test_api.py)
 """
+
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture(scope="module")
 def client():
-    with patch("production.backend.app.db.seed.run_seed", return_value=None), \
-         patch("production.backend.app.services.recommendation_service.RecommendationService.load") as mock_load:
+    with (
+        patch("production.backend.app.db.seed.run_seed", return_value=None),
+        patch(
+            "production.backend.app.services.recommendation_service.RecommendationService.load"
+        ) as mock_load,
+    ):
         mock_load.return_value = MagicMock()
         from production.backend.app.main import app
+
         with TestClient(app) as c:
             yield c
 

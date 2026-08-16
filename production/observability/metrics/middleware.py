@@ -16,11 +16,12 @@ Usage (in a FastAPI app):
     from production.observability.metrics.middleware import instrument_app
     instrument_app(app, service_name="backend")
 """
+
 import time
 
 from fastapi import FastAPI, Request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from starlette.responses import Response
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 REQUEST_COUNT = Counter(
     "http_requests_total", "Total HTTP requests", ["service", "method", "path", "status"]

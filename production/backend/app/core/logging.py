@@ -8,6 +8,7 @@ duplicating logging.basicConfig(...) here. `setup_logging()` and
 `from .core.logging import ...` / `from ..core.logging import ...`
 import elsewhere in the backend keeps working unchanged.
 """
+
 from production.observability.logging import configure_logging
 
 logger = configure_logging("ncf_api")

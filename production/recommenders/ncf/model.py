@@ -5,6 +5,7 @@ MLP-NCF matching production_model.pt checkpoint exactly.
   mlp: Linear(64→64) ReLU Linear(64→32) ReLU
   output: Linear(32→1)
 """
+
 import torch
 import torch.nn as nn
 
@@ -14,7 +15,6 @@ def get_device() -> torch.device:
 
 
 class PyTorchNCF(nn.Module):
-
     def __init__(self, n_users: int, n_items: int, emb_dim: int = 32, hidden: list = None):
         super().__init__()
         if hidden is None:

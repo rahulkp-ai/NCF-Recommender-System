@@ -11,3 +11,18 @@ ignore = ["E501"]
 
 [format]
 quote-style = "double"
+
+[lint.flake8-bugbear]
+# FastAPI's Depends(...)/Query(...) in argument defaults is the correct,
+# documented idiom — not the "mutable default" footgun B008 exists to catch.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[lint.per-file-ignores]
+# Deliberate sys.path.insert() pattern (see Phase 4 fix, docs/decisions/):
+# imports must come after the path manipulation, so E402 here is correct
+# code being flagged, not a real problem.
+"production/backend/app/main.py" = ["E402"]
+"production/serving/app/main.py" = ["E402"]
+# `if __name__ == "__main__": pytest.main(...)` pattern places the pytest
+# import after the test functions it runs — E402 false positive.
+"production/tests/unit/test_metrics.py" = ["E402"]

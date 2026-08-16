@@ -20,11 +20,11 @@ class BCELoss:
     Internally applies sigmoid, computes loss, and stores the clean gradient.
     """
 
-    EPS = 1e-12   # prevent log(0)
+    EPS = 1e-12  # prevent log(0)
 
     def __init__(self):
         self._y_hat: float | None = None
-        self._y:     float | None = None
+        self._y: float | None = None
 
     # ── Forward ──────────────────────────────────────────────────────────────
 
@@ -42,10 +42,9 @@ class BCELoss:
         # Apply sigmoid here for numerical stability
         y_hat = 1.0 / (1.0 + np.exp(-np.clip(logit, -500, 500)))
         self._y_hat = y_hat
-        self._y     = y
+        self._y = y
 
-        loss = -(y * np.log(y_hat + self.EPS)
-                 + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
+        loss = -(y * np.log(y_hat + self.EPS) + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
         return float(loss)
 
     # ── Backward ─────────────────────────────────────────────────────────────
@@ -61,8 +60,8 @@ class BCELoss:
 
         This is why we compute BCE on the logit, not on ŷ directly.
         """
-        return self._y_hat - self._y    # scalar
+        return self._y_hat - self._y  # scalar
 
     def zero_grad(self):
         self._y_hat = None
-        self._y     = None
+        self._y = None

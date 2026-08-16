@@ -3,9 +3,11 @@ gateway/fastapi_gateway/main.py
 Lightweight API Gateway — validates JWT and proxies to backend.
 For production, nginx handles this; this gateway is optional middleware.
 """
+
 import httpx
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import Response
+
 from .middleware import jwt_middleware
 
 BACKEND_URL = "http://backend:8000"
@@ -38,4 +40,4 @@ async def proxy(path: str, request: Request):
                 media_type=resp.headers.get("content-type"),
             )
         except httpx.ConnectError:
-            raise HTTPException(status_code=503, detail="Backend unavailable")
+            raise HTTPException(status_code=503, detail="Backend unavailable") from None

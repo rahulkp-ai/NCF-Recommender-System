@@ -3,17 +3,19 @@ production/backend/app/services/tmdb_service.py
 Fetches TMDB poster URLs for movies and caches them in the database.
 Run once after seeding: python -m backend.app.services.tmdb_service
 """
-import os
+
 import re
 import time
+
 import requests
 from sqlalchemy.orm import Session
+
+from ..core.config import TMDB_API_KEY
 from ..db.connection import SessionLocal
 from ..db.models import Movie
-from ..core.config import TMDB_API_KEY
 
 TMDB_SEARCH = "https://api.themoviedb.org/3/search/movie"
-TMDB_IMG    = "https://image.tmdb.org/t/p/w500"
+TMDB_IMG = "https://image.tmdb.org/t/p/w500"
 
 
 def clean_title(title: str) -> str:
@@ -24,11 +26,15 @@ def fetch_poster(title: str, year: int | None) -> str | None:
     if not TMDB_API_KEY:
         return None
     try:
-        r = requests.get(TMDB_SEARCH, params={
-            "api_key": TMDB_API_KEY,
-            "query": clean_title(title),
-            "year": year or "",
-        }, timeout=5)
+        r = requests.get(
+            TMDB_SEARCH,
+            params={
+                "api_key": TMDB_API_KEY,
+                "query": clean_title(title),
+                "year": year or "",
+            },
+            timeout=5,
+        )
         if r.status_code == 401:
             return None
         r.raise_for_status()
@@ -45,7 +51,7 @@ def populate_posters(limit: int = 4000, sleep: float = 0.25):
     try:
         movies = (
             db.query(Movie)
-            .filter((Movie.poster_url == None) | (Movie.poster_url == ""))
+            .filter((Movie.poster_url.is_(None)) | (Movie.poster_url == ""))
             .limit(limit)
             .all()
         )

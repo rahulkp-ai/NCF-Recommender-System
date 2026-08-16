@@ -8,19 +8,20 @@ This is the script referenced in your thesis results table.
 # python -m research.models.pytorch_ncf.evaluate
 
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import torch
-from pathlib import Path
+
 from .model import PyTorchNCF, get_device
 from .train import hit_at_k
 
 PROC_DIR = Path("research/datasets/processed")
-LOG_DIR  = Path("research/evaluation")
+LOG_DIR = Path("research/evaluation")
 
 
-def ndcg_at_k(model, val_df, n_items, k=10,
-              n_neg=99, seed=0, device=None):
+def ndcg_at_k(model, val_df, n_items, k=10, n_neg=99, seed=0, device=None):
     """
     NDCG@K — Normalised Discounted Cumulative Gain.
     Measures not just whether the positive is in top-K,
@@ -32,21 +33,20 @@ def ndcg_at_k(model, val_df, n_items, k=10,
     if device is None:
         device = get_device()
     model.eval()
-    rng   = np.random.default_rng(seed)
+    rng = np.random.default_rng(seed)
     ndcgs = []
 
     with torch.no_grad():
         for _, row in val_df.iterrows():
-            uid      = int(row.user_id)
+            uid = int(row.user_id)
             pos_item = int(row.item_id)
-            neg_items  = rng.integers(0, n_items, size=n_neg).tolist()
+            neg_items = rng.integers(0, n_items, size=n_neg).tolist()
             candidates = [pos_item] + neg_items
 
-            u_t = torch.full((len(candidates),), uid,
-                             dtype=torch.long, device=device)
+            u_t = torch.full((len(candidates),), uid, dtype=torch.long, device=device)
             i_t = torch.tensor(candidates, dtype=torch.long, device=device)
-            scores   = model.predict(u_t, i_t).cpu().numpy()
-            ranked   = np.argsort(-scores)
+            scores = model.predict(u_t, i_t).cpu().numpy()
+            ranked = np.argsort(-scores)
             pos_rank = int(np.where(ranked == 0)[0][0])
 
             ndcg = 1.0 / np.log2(pos_rank + 2) if pos_rank < k else 0.0
@@ -57,11 +57,12 @@ def ndcg_at_k(model, val_df, n_items, k=10,
 
 def full_evaluation(weights_path: str = None) -> dict:
     """Run Hit@10 and NDCG@10 on the full test set."""
-    meta    = json.load(open(PROC_DIR / "meta.json"))
+    with open(PROC_DIR / "meta.json") as f:
+        meta = json.load(f)
     n_users = meta["n_users"]
     n_items = meta["n_items"]
     test_df = pd.read_csv(PROC_DIR / "test.csv")
-    device  = get_device()
+    device = get_device()
 
     model = PyTorchNCF(n_users, n_items, emb_dim=32, hidden=[64, 32])
     if weights_path is None:
@@ -70,7 +71,7 @@ def full_evaluation(weights_path: str = None) -> dict:
     model.to(device)
 
     print(f"Evaluating on {len(test_df):,} test users...")
-    hit  = hit_at_k(model, test_df, n_items, k=10, device=device)
+    hit = hit_at_k(model, test_df, n_items, k=10, device=device)
     ndcg = ndcg_at_k(model, test_df, n_items, k=10, device=device)
 
     results = {"hit_at_10": round(hit, 4), "ndcg_at_10": round(ndcg, 4)}

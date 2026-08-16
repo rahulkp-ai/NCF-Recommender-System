@@ -1,4 +1,5 @@
 """gateway/fastapi_gateway/middleware.py"""
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 

@@ -1,7 +1,9 @@
 """backend/app/services/search_service.py"""
+
 from sqlalchemy.orm import Session
+
 from ..db.repository import MovieRepository
-from ..schemas.movie import SearchResponse, MovieOut
+from ..schemas.movie import MovieOut, SearchResponse
 
 
 class SearchService:

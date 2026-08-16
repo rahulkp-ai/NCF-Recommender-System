@@ -5,16 +5,18 @@ GET /api/v1/recommend/homepage    — cold-start / anonymous
 GET /api/v1/recommend/trending    — trending movies (with posters)
 GET /api/v1/recommend/popular     — most-interacted movies
 """
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
-from ..deps import get_current_user, get_optional_user
-from ...db.session import get_db
-from ...db.repository import MovieRepository
-from ...db.models import User
-from ...schemas.recommendation import RecommendationResponse, HomepageResponse
-from ...schemas.movie import MovieOut
 from production.shared.exceptions.errors import NotFoundError
+
+from ...db.models import User
+from ...db.repository import MovieRepository
+from ...db.session import get_db
+from ...schemas.movie import MovieOut
+from ...schemas.recommendation import HomepageResponse, RecommendationResponse
+from ..deps import get_current_user
 
 router = APIRouter(prefix="/api/v1/recommend", tags=["recommend"])
 

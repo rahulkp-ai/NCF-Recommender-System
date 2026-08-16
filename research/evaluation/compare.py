@@ -6,11 +6,11 @@ data structures consumed by the dashboard and thesis plots.
 """
 
 import json
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
-LOG_DIR  = Path("research/evaluation")
+import numpy as np
+
+LOG_DIR = Path("research/evaluation")
 PROC_DIR = Path("research/datasets/processed")
 
 
@@ -20,16 +20,14 @@ def load_logs() -> tuple[dict, dict]:
     p_path = LOG_DIR / "pytorch_ncf_log.json"
 
     if not s_path.exists():
-        raise FileNotFoundError(
-            f"Scratch log not found at {s_path}. Run Phase 3 training first."
-        )
+        raise FileNotFoundError(f"Scratch log not found at {s_path}. Run Phase 3 training first.")
     if not p_path.exists():
-        raise FileNotFoundError(
-            f"PyTorch log not found at {p_path}. Run Phase 4 training first."
-        )
+        raise FileNotFoundError(f"PyTorch log not found at {p_path}. Run Phase 4 training first.")
 
-    with open(s_path) as f: scratch = json.load(f)
-    with open(p_path) as f: pytorch = json.load(f)
+    with open(s_path) as f:
+        scratch = json.load(f)
+    with open(p_path) as f:
+        pytorch = json.load(f)
     return scratch, pytorch
 
 
@@ -47,8 +45,8 @@ def build_comparison_table() -> dict:
     def epoch_series_nonnull(log, key):
         return [(e["epoch"], e[key]) for e in log["epochs"] if e[key] is not None]
 
-    s_loss  = epoch_series(scratch, "loss")
-    p_loss  = epoch_series(pytorch, "loss")
+    s_loss = epoch_series(scratch, "loss")
+    p_loss = epoch_series(pytorch, "loss")
     s_times = epoch_series(scratch, "time_sec")
     p_times = epoch_series(pytorch, "time_sec")
 
@@ -57,52 +55,45 @@ def build_comparison_table() -> dict:
 
     # Per-epoch speedup ratio
     speedup_per_epoch = [
-        round(s / p, 2) if p > 0 else None
-        for s, p in zip(s_times, p_times)
+        round(s / p, 2) if p > 0 else None for s, p in zip(s_times, p_times, strict=False)
     ]
 
     # Convergence: first epoch where loss < threshold
     def first_below(losses, threshold=0.35):
-        for i, l in enumerate(losses):
-            if l < threshold:
+        for i, layer in enumerate(losses):
+            if layer < threshold:
                 return i + 1
         return None
 
     return {
-        "epochs":         list(range(1, len(s_loss) + 1)),
+        "epochs": list(range(1, len(s_loss) + 1)),
         "scratch": {
-            "loss":            [round(x, 6) for x in s_loss],
-            "hit_at_10":       s_hit_pairs,
-            "time_per_epoch":  [round(x, 1) for x in s_times],
-            "total_time":      scratch.get("total_time_sec"),
-            "best_hit":        scratch.get("best_hit_at_10"),
-            "config":          scratch.get("config", {}),
-            "converge_epoch":  first_below(s_loss),
+            "loss": [round(x, 6) for x in s_loss],
+            "hit_at_10": s_hit_pairs,
+            "time_per_epoch": [round(x, 1) for x in s_times],
+            "total_time": scratch.get("total_time_sec"),
+            "best_hit": scratch.get("best_hit_at_10"),
+            "config": scratch.get("config", {}),
+            "converge_epoch": first_below(s_loss),
         },
         "pytorch": {
-            "loss":            [round(x, 6) for x in p_loss],
-            "hit_at_10":       p_hit_pairs,
-            "time_per_epoch":  [round(x, 1) for x in p_times],
-            "total_time":      pytorch.get("total_time_sec"),
-            "best_hit":        pytorch.get("best_hit_at_10"),
-            "config":          pytorch.get("config", {}),
-            "converge_epoch":  first_below(p_loss),
+            "loss": [round(x, 6) for x in p_loss],
+            "hit_at_10": p_hit_pairs,
+            "time_per_epoch": [round(x, 1) for x in p_times],
+            "total_time": pytorch.get("total_time_sec"),
+            "best_hit": pytorch.get("best_hit_at_10"),
+            "config": pytorch.get("config", {}),
+            "converge_epoch": first_below(p_loss),
         },
         "comparison": {
-            "speedup_per_epoch":     speedup_per_epoch,
-            "avg_speedup":           round(float(np.mean(
-                [x for x in speedup_per_epoch if x])
-            ), 2),
-            "total_speedup":         round(
-                scratch.get("total_time_sec", 1) /
-                max(pytorch.get("total_time_sec", 1), 1), 2
+            "speedup_per_epoch": speedup_per_epoch,
+            "avg_speedup": round(float(np.mean([x for x in speedup_per_epoch if x])), 2),
+            "total_speedup": round(
+                scratch.get("total_time_sec", 1) / max(pytorch.get("total_time_sec", 1), 1), 2
             ),
-            "final_loss_delta":      round(
-                abs(s_loss[-1] - p_loss[-1]), 6
-            ),
-            "best_hit_delta":        round(
-                abs(scratch.get("best_hit_at_10", 0) -
-                    pytorch.get("best_hit_at_10", 0)), 4
+            "final_loss_delta": round(abs(s_loss[-1] - p_loss[-1]), 6),
+            "best_hit_delta": round(
+                abs(scratch.get("best_hit_at_10", 0) - pytorch.get("best_hit_at_10", 0)), 4
             ),
         },
     }
@@ -115,12 +106,12 @@ def save_comparison(outpath: str = "research/evaluation/comparison.json"):
     print(f"Comparison saved to {outpath}")
 
     c = data["comparison"]
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"  Average speedup      : {c['avg_speedup']}×")
     print(f"  Total time speedup   : {c['total_speedup']}×")
     print(f"  Final loss delta     : {c['final_loss_delta']:.6f}")
     print(f"  Best Hit@10 delta    : {c['best_hit_delta']:.4f}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     return data
 
 

@@ -6,6 +6,7 @@ Split out of ml/models/ncf/cold_start.py in Phase 4 (see
 docs/decisions/0003-recommenders-serving-rename.md). ContentEngine
 logic below is unchanged, verbatim from the original file.
 """
+
 import numpy as np
 import pandas as pd
 
@@ -14,11 +15,26 @@ class ContentEngine:
     """
     Content-based scoring via binary genre vectors + cosine similarity.
     """
+
     GENRES = [
-        "Action", "Adventure", "Animation", "Children's", "Comedy",
-        "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir",
-        "Horror", "Musical", "Mystery", "Romance", "Sci-Fi",
-        "Thriller", "War", "Western",
+        "Action",
+        "Adventure",
+        "Animation",
+        "Children's",
+        "Comedy",
+        "Crime",
+        "Documentary",
+        "Drama",
+        "Fantasy",
+        "Film-Noir",
+        "Horror",
+        "Musical",
+        "Mystery",
+        "Romance",
+        "Sci-Fi",
+        "Thriller",
+        "War",
+        "Western",
     ]
 
     def __init__(self):
@@ -50,15 +66,13 @@ class ContentEngine:
         if item_id not in self._item_vectors:
             return 0.0
         iv = self._item_vectors[item_id]
-        num   = float(np.dot(user_profile, iv))
+        num = float(np.dot(user_profile, iv))
         denom = float(np.linalg.norm(user_profile) * np.linalg.norm(iv))
         return num / denom if denom > 1e-9 else 0.0
 
     def top_k(self, user_profile: np.ndarray, k: int, exclude: set[int] | None = None) -> list[int]:
         exclude = exclude or set()
         scores = {
-            iid: self.score(user_profile, iid)
-            for iid in self._item_vectors
-            if iid not in exclude
+            iid: self.score(user_profile, iid) for iid in self._item_vectors if iid not in exclude
         }
         return sorted(scores, key=scores.get, reverse=True)[:k]

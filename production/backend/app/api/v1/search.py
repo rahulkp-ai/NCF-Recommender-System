@@ -2,6 +2,7 @@
 production/backend/app/api/v1/search.py
 GET /api/v1/search?q=<query>
 """
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 

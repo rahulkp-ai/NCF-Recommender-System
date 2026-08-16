@@ -24,14 +24,14 @@ class EmbeddingLayer:
     n, k    : int — vocabulary size and embedding dimension
     """
 
-    def __init__(self, num_embeddings: int, embedding_dim: int,seed: int = 42):
+    def __init__(self, num_embeddings: int, embedding_dim: int, seed: int = 42):
         rng = np.random.default_rng(seed)
 
         # He (Kaiming) initialisation for ReLU networks:
         #   std = sqrt(2 / fan_in)
         # For embeddings fan_in = embedding_dim
         std = np.sqrt(2.0 / embedding_dim)
-        self.W  = rng.normal(0.0, std, (num_embeddings, embedding_dim))
+        self.W = rng.normal(0.0, std, (num_embeddings, embedding_dim))
         self.dW = np.zeros_like(self.W)
 
         self.n = num_embeddings
@@ -56,7 +56,7 @@ class EmbeddingLayer:
         """
         assert 0 <= idx < self.n, f"Index {idx} out of range [0, {self.n})"
         self._last_idx = idx
-        return self.W[idx]                   # shape (k,)
+        return self.W[idx]  # shape (k,)
 
     # ── Backward ─────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ class EmbeddingLayer:
         grad : ndarray shape (k,) — gradient of loss w.r.t. embedding vector
         """
         assert self._last_idx is not None, "Call forward() before backward()"
-        self.dW[self._last_idx] += grad      # accumulate (for mini-batches)
+        self.dW[self._last_idx] += grad  # accumulate (for mini-batches)
 
     def zero_grad(self) -> None:
         """Reset accumulated gradients to zero before each batch."""
@@ -80,5 +80,4 @@ class EmbeddingLayer:
         self._last_idx = None
 
     def __repr__(self):
-        return (f"EmbeddingLayer(num_embeddings={self.n}, "
-                f"embedding_dim={self.k})")
+        return f"EmbeddingLayer(num_embeddings={self.n}, embedding_dim={self.k})"

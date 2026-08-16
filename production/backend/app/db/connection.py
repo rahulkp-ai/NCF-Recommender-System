@@ -2,6 +2,7 @@
 production/backend/app/db/connection.py
 SQLAlchemy engine, session factory, and table-creation helper.
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
