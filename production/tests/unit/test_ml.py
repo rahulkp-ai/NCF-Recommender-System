@@ -126,14 +126,14 @@ class TestAlphaSchedule:
 
 class TestSecurity:
     def test_hash_and_verify(self):
-        from backend.app.core.security import hash_password, verify_password
+        from production.backend.app.core.security import hash_password, verify_password
 
         hashed = hash_password("mysecret")
         assert verify_password("mysecret", hashed)
         assert not verify_password("wrongpass", hashed)
 
     def test_jwt_roundtrip(self):
-        from backend.app.core.security import create_access_token, decode_access_token
+        from production.backend.app.core.security import create_access_token, decode_access_token
 
         token = create_access_token({"sub": "42"})
         payload = decode_access_token(token)
@@ -141,6 +141,6 @@ class TestSecurity:
         assert payload["sub"] == "42"
 
     def test_invalid_jwt(self):
-        from backend.app.core.security import decode_access_token
+        from production.backend.app.core.security import decode_access_token
 
         assert decode_access_token("not.a.valid.token") is None

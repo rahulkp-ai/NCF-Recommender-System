@@ -23,9 +23,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from production.backend.app.db.connection import create_tables
+
 
 @pytest.fixture(scope="module")
 def client():
+    # run_seed() is mocked below (slow synthetic data generation, not needed
+    # for these tests), but that also skips its internal create_tables() call
+    # — so we create the schema explicitly here against a real test database.
+    create_tables()
     with (
         patch("production.backend.app.db.seed.run_seed", return_value=None),
         patch(
