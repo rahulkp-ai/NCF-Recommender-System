@@ -22,7 +22,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
 from production.backend.app.db.connection import create_tables
 
 
