@@ -46,7 +46,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-me-super-secret-key-min-32-characters!!}
       TMDB_API_KEY: ${TMDB_API_KEY:-}
       MODEL_SERVER_URL: http://model_server:8001
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://web:3000
+      CORS_ORIGINS: http://localhost,http://localhost:80,http://localhost:3000,http://localhost:3001,http://web:3000
       APP_ENV: ${APP_ENV:-development}
     volumes:
       - ./production/artifacts:/app/production/artifacts:ro
