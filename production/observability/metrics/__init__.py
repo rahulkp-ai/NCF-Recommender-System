@@ -1,3 +1,3 @@
-from .middleware import instrument_app
+from .middleware import RECOMMENDATION_STRATEGY, instrument_app
 
-__all__ = ["instrument_app"]
+__all__ = ["RECOMMENDATION_STRATEGY", "instrument_app"]

@@ -5,6 +5,8 @@ Wraps HybridEngine; bridges ML model and the database.
 
 from sqlalchemy.orm import Session
 
+from production.observability.metrics import RECOMMENDATION_STRATEGY
+
 from ..core.logging import logger
 from ..db.repository import InteractionRepository, MovieRepository
 
@@ -40,16 +42,19 @@ class RecommendationService:
         recs = self.engine.recommend(user_id=user_id, seen_items=seen_items, k=k)
         enriched = self._enrich(recs, db)
 
+        strategy = "ncf" if alpha >= 0.5 else ("blend" if alpha > 0 else "cold_start")
+        RECOMMENDATION_STRATEGY.labels("backend", strategy).inc()
         return {
             "user_id": user_id,
             "n_interactions": n_seen,
             "alpha": round(alpha, 3),
-            "strategy": "ncf" if alpha >= 0.5 else ("blend" if alpha > 0 else "cold_start"),
+            "strategy": strategy,
             "recommendations": enriched,
         }
 
     def recommend_homepage(self, db: Session, k: int = 20) -> dict:
         recs = self.engine.recommend(user_id=0, seen_items=[], k=k)
+        RECOMMENDATION_STRATEGY.labels("backend", "cold_start").inc()
         return {"strategy": "cold_start", "recommendations": self._enrich(recs, db)}
 
     def search_and_recommend(self, query: str, user_id: int, db: Session, k: int = 10) -> dict:
@@ -67,6 +72,7 @@ class RecommendationService:
             }
             for m in movies
         ]
+        RECOMMENDATION_STRATEGY.labels("backend", "search").inc()
         return {"query": query, "results": results, "total": len(results)}
 
     # ── enrichment ────────────────────────────────────────────────────────────

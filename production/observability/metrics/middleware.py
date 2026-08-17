@@ -29,6 +29,11 @@ REQUEST_COUNT = Counter(
 REQUEST_LATENCY = Histogram(
     "http_request_duration_seconds", "HTTP request latency", ["service", "method", "path"]
 )
+RECOMMENDATION_STRATEGY = Counter(
+    "recommendation_strategy_total",
+    "Recommendations served, broken down by strategy (ncf, blend, cold_start, search)",
+    ["service", "strategy"],
+)
 
 
 def instrument_app(app: FastAPI, service_name: str) -> None:
