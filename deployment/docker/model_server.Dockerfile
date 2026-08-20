@@ -18,6 +18,7 @@ COPY production/recommenders/   ./production/recommenders/
 COPY production/observability/  ./production/observability/
 COPY production/shared/         ./production/shared/
 COPY production/__init__.py     ./production/__init__.py
+COPY production/artifacts/       ./production/artifacts/
 
 ENV PYTHONPATH=/app
 EXPOSE 8001
