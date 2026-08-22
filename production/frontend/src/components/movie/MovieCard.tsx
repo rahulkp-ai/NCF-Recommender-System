@@ -9,7 +9,8 @@ interface Props {
   showBadge?: boolean;
 }
 
-const PLACEHOLDER = "https://via.placeholder.com/300x450/1a1a1a/555?text=No+Poster";
+const PLACEHOLDER =
+  "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%231a1a1a'/%3E%3Ctext x='150' y='225' font-family='sans-serif' font-size='18' fill='%23555' text-anchor='middle' dominant-baseline='middle'%3ENo Poster%3C/text%3E%3C/svg%3E";
 
 export default function MovieCard({ movie, showBadge }: Props) {
   const [liked, setLiked]     = useState(false);
