@@ -74,3 +74,4 @@ logs/
 .ruff_cache/
 *.bak
 *.tmp
+*next-env.d.ts
