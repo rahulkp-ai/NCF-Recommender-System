@@ -30,32 +30,28 @@
 </head>
 <body>
   <h1>NCF Benchmark Dashboard</h1>
-  <p class="sub">Scratch (NumPy) vs PyTorch — Precision & Recall Validation</p>
+  <p class="sub">Scratch (NumPy) vs PyTorch — Loss, Hit@10 & Training Time</p>
 
   <div class="metrics">
-    <div class="mc"><div class="mc-label">Avg speedup</div><div class="mc-val" id="m-speedup">12.9×</div></div>
-    <div class="mc"><div class="mc-label">Final loss delta</div><div class="mc-val" id="m-ldelta">0.0014</div></div>
-    <div class="mc"><div class="mc-label">Best Hit@10 delta</div><div class="mc-val" id="m-hdelta">0.015</div></div>
-    <div class="mc"><div class="mc-label">Parameters</div><div class="mc-val" style="color:#4ade80">Identical</div></div>
+    <div class="mc"><div class="mc-label">Avg speedup</div><div class="mc-val" id="m-speedup">Loading...</div></div>
+    <div class="mc"><div class="mc-label">Final loss delta</div><div class="mc-val" id="m-ldelta">Loading...</div></div>
+    <div class="mc"><div class="mc-label">Best Hit@10 delta</div><div class="mc-val" id="m-hdelta">Loading...</div></div>
+    <div class="mc"><div class="mc-label">Architecture</div><div class="mc-val" style="color:#4ade80">Same</div></div>
   </div>
 
   <div class="params-grid">
-    <div class="param-item"><div class="param-label">Embedding Dim</div><div class="param-val">32</div></div>
-    <div class="param-item"><div class="param-label">MLP Layers</div><div class="param-val">[64, 32]</div></div>
-    <div class="param-item"><div class="param-label">Learning Rate</div><div class="param-val">0.001</div></div>
-    <div class="param-item"><div class="param-label">Batch Size</div><div class="param-val">1024</div></div>
-    <div class="param-item"><div class="param-label">Epochs</div><div class="param-val">20</div></div>
-    <div class="param-item"><div class="param-label">Neg Ratio</div><div class="param-val">4:1</div></div>
+    <div class="param-item"><div class="param-label">Embedding Dim</div><div class="param-val" id="p-emb-dim">Loading...</div></div>
+    <div class="param-item"><div class="param-label">MLP Layers</div><div class="param-val" id="p-hidden">Loading...</div></div>
+    <div class="param-item"><div class="param-label">Learning Rate</div><div class="param-val" id="p-lr">Loading...</div></div>
+    <div class="param-item"><div class="param-label">Scratch Batch</div><div class="param-val" id="p-scratch-batch">Loading...</div></div>
+    <div class="param-item"><div class="param-label">PyTorch Batch</div><div class="param-val" id="p-pytorch-batch">Loading...</div></div>
+    <div class="param-item"><div class="param-label">Epochs</div><div class="param-val" id="p-epochs">Loading...</div></div>
   </div>
 
   <div class="tabs">
     <button class="tab on" onclick="show('loss',this)">Loss curves</button>
     <button class="tab" onclick="show('hit',this)">Hit@10</button>
-    <!-- New Tabs -->
-    <button class="tab" onclick="show('precision',this)">Precision@10</button>
-    <button class="tab" onclick="show('recall',this)">Recall@10</button>
     <button class="tab" onclick="show('time',this)">Training time</button>
-    <!-- <button class="tab" onclick="show('speedup',this)">Speedup</button> -->
   </div>
 
   <div class="legend">
@@ -71,32 +67,28 @@
 
   <script>
   let chart = null;
-  let data  = null;
+  let data = null;
+  const DATA_URL = '../../evaluation/comparison.json';
 
   async function loadData() {
-    // Logic to fetch or simulate data
-    const n = 20;
-    const epochs = Array.from({length:n},(_,i)=>i+1);
-    function curve(s,e,ns) { return Array.from({length:n},(_,i)=>parseFloat((s+(e-s)*(1-Math.exp(-3.5*i/(n-1)))+(Math.random()-.5)*ns).toFixed(4))); }
-    
-    data = {
-      epochs,
-      scratch: { 
-        loss:curve(.693,.320,.007), 
-        hit:curve(.05, .28, .01),
-        precision: curve(.02, .18, .005),
-        recall: curve(.01, .12, .005),
-        time: Array.from({length:n},()=>parseFloat((88+(Math.random()-.5)*8).toFixed(1)))
-      },
-      pytorch: { 
-        loss:curve(.693,.306,.004), 
-        hit:curve(.05, .30, .005),
-        precision: curve(.02, .19, .004),
-        recall: curve(.01, .13, .004),
-        time: Array.from({length:n},()=>parseFloat((6.8+(Math.random()-.5)*.6).toFixed(1)))
-      }
-    };
-    show('loss', document.querySelector('.tab.on'));
+    try {
+      const response = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      data = await response.json();
+
+      document.getElementById('m-speedup').textContent = `${data.comparison.avg_speedup}x`;
+      document.getElementById('m-ldelta').textContent = data.comparison.final_loss_delta.toFixed(6);
+      document.getElementById('m-hdelta').textContent = data.comparison.best_hit_delta.toFixed(4);
+      document.getElementById('p-emb-dim').textContent = data.scratch.config.emb_dim;
+      document.getElementById('p-hidden').textContent = `[${data.scratch.config.hidden.join(', ')}]`;
+      document.getElementById('p-lr').textContent = data.scratch.config.lr;
+      document.getElementById('p-scratch-batch').textContent = data.scratch.config.batch_size;
+      document.getElementById('p-pytorch-batch').textContent = data.pytorch.config.batch_size;
+      document.getElementById('p-epochs').textContent = data.epochs.length;
+      show('loss', document.querySelector('.tab.on'));
+    } catch (error) {
+      document.querySelector('.sub').textContent = `Unable to load benchmark data: ${error.message}`;
+    }
   }
 
   function show(key, btn) {
@@ -112,15 +104,11 @@
 
     let minVal = 0;
     if (key === 'loss') { datasets[0].data = data.scratch.loss; datasets[1].data = data.pytorch.loss; minVal = 0.28; }
-    else if (key === 'hit') { datasets[0].data = data.scratch.hit; datasets[1].data = data.pytorch.hit; }
-    else if (key === 'precision') { datasets[0].data = data.scratch.precision; datasets[1].data = data.pytorch.precision; }
-    else if (key === 'recall') { datasets[0].data = data.scratch.recall; datasets[1].data = data.pytorch.recall; }
-    else if (key === 'time') { datasets[0].data = data.scratch.time; datasets[1].data = data.pytorch.time; }
-    else if (key === 'speedup') { 
-      const su = data.scratch.time.map((s,i)=>parseFloat((s/data.pytorch.time[i]).toFixed(1)));
-      chart = new Chart(ctx, { type:'bar', data:{labels:data.epochs, datasets:[{label:'Speedup',data:su,backgroundColor:'#1D9E75',borderRadius:3}]}, options:{responsive:true, maintainAspectRatio:false} });
-      return;
+    else if (key === 'hit') {
+      datasets[0].data = data.scratch.hit_at_10.map(point => ({ x: point[0], y: point[1] }));
+      datasets[1].data = data.pytorch.hit_at_10.map(point => ({ x: point[0], y: point[1] }));
     }
+    else if (key === 'time') { datasets[0].data = data.scratch.time_per_epoch; datasets[1].data = data.pytorch.time_per_epoch; }
 
     chart = new Chart(ctx, {
       type: 'line',
