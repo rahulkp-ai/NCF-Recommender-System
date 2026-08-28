@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/rahulkp-ai/NCF-Recommender-System/actions/workflows/ci.yaml/badge.svg)](.github/workflows/ci.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?logo=vercel)](https://ncf-frontend.vercel.app/)
+[![Benchmark Dashboard](https://img.shields.io/badge/Benchmark-Dashboard-blue)](https://rahulkp-ai.github.io/NCF-Recommender-System/research/comparisons/dashboard/)
 
 ## Overview
 
