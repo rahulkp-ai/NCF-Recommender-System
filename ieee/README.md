@@ -27,3 +27,7 @@ pandoc paper.md \
   --pdf-engine=pdflatex \
   -o paper.pdf
 ```
+
+```bash
+pandoc paper.md -V documentclass=IEEEtran -V classoption=conference --pdf-engine=pdflatex -o paper.pdf
+```
