@@ -205,4 +205,66 @@ Figure 6 presents a composite benchmark panel including loss convergence, HR@10 
 
 ![NCF Benchmark: composite analysis panel. (A) Loss convergence curves confirming equivalent learning behaviour. (B) HR@10 trajectories showing PyTorch NCF superiority at peak quality. (C) Per-epoch speedup ratios, mean 3.4×. (D) Summary comparison table: final loss 0.22 (Scratch) vs. 0.2307 (PyTorch), best HR@10 0.580 vs. 0.615, total training time 3,294 8 s vs. 972.1 s.](images/06%20NCF%20Benchmark%20Scratch%20vs%20PyTorch.png){width=\columnwidth}
 
-Table I presents a consolidated numerical summary of the key benchmarking results.
+Figure 7 presents a consolidated numerical summary of the key benchmarking results.
+
+![Comparative Benchmark: Scratch NCF vs. PyTorch NCF](images/07%20Comparative%20Benchmark:%20Scratch%20NCF%20vs.%20PyTorch%20NCF.png){width=\columnwidth}
+
+## VII. DISCUSSION
+
+### A. Why MLP Improves Representation Learning
+
+The empirical advantage of the NCF framework over pure MF—evidenced by the HR@10 improvement from the MF baseline of approximately 0.50 to the observed 0.58–0.615—can be attributed to the MLP pathway's capacity to model arbitrary continuous functions of the user and item embeddings. The fundamental limitation of MF, as formalised by He et al. [1], is that the inner product satisfies the triangle inequality in the latent space; this constrains the representable preference orderings to a bounded subset of all possible orderings. The MLP overcomes this by applying a sequence of non-linear projections that can approximate any Borel-measurable function of the embedding pair, enabling the model to represent interaction patterns that are geometrically infeasible under the inner product metric.
+
+The GMF pathway retains the interpretability advantage of matrix factorization: the element-wise product of embedding vectors can be interpreted as a per-dimension compatibility score, and the projection weights $\hat{h}^G$ provide a learned re-weighting of these dimensions. The NeuMF fusion architecture thus combines the interpretability of GMF with the expressivity of the MLP, achieving performance that exceeds either pathway in isolation.
+
+### B. Cold-Start Problem and Hybrid Design
+
+A fundamental challenge in deployed recommendation systems is the cold-start problem: for new users or newly added items, the interaction history required by collaborative filtering is absent. The hybrid scoring function adopted in this system addresses user cold-start by transitioning from a popularity/content-based score to the NCF score as interaction history accumulates. For item cold-start, genre-based content similarity provides initial recommendations until sufficient interaction data enables the NCF model to produce meaningful latent representations.
+
+The dynamic weighting parameter $\alpha$ is a simplification of the Bayesian Personalised Ranking framework [14], which provides a theoretically grounded approach to weighting collaborative and content-based scores. Future work should consider replacing the linear $\alpha$ interpolation with a learned gating mechanism that selects between recommendation sources based on user-specific interaction richness indicators.
+
+### C. Accuracy–Latency Trade-offs in Production
+
+Production deployment introduces tension between recommendation accuracy and inference latency. The PyTorch NCF, while achieving higher HR@10, requires a full forward pass over all candidate items to generate a ranked recommendation list. For a catalogue of 3,706 movies and batch sizes of 512, inference latency is approximately 12 ms per user on MPS hardware—acceptable for interactive use. However, at catalogue scales typical of commercial platforms (millions of items), brute-force scoring becomes prohibitively slow, necessitating approximate nearest-neighbour retrieval in the embedding space (e.g., via FAISS [15]) as a pre-filtering stage. The present system implements full catalogue scoring as a design choice appropriate to the MovieLens scale and as the most accurate configuration for benchmarking purposes.
+
+### D. Scalability Considerations
+
+The microservices architecture provides a natural mechanism for horizontal scaling: the inference service can be replicated across multiple instances behind a load balancer, with Redis ensuring cache consistency across replicas. The PostgreSQL interaction store becomes a bottleneck under high write loads; this can be mitigated by buffering interaction events in an asynchronous queue (e.g., Apache Kafka) and batching database writes, a pattern well-established in industrial recommendation infrastructure [12]. Online model retraining in response to new interaction data—not implemented in the current system—would require either incremental parameter updates via continual learning techniques or periodic full retraining triggered by an interaction volume threshold.
+
+## VIII. CONCLUSION AND FUTURE WORK
+
+This paper presented a complete end-to-end implementation and deployment of the Neural Collaborative Filtering framework, encompassing a mathematically rigorous from-scratch NumPy implementation with manual backpropagation, a benchmarked PyTorch implementation leveraging Apple Silicon MPS acceleration, a hybrid cold-start recommendation module, and a production-grade microservices architecture with a Netflix-style frontend.
+
+The primary empirical findings are:
+
+1. Both implementations converge to equivalent final BCE losses (0.2257 and 0.2307), validating the correctness of the manual backpropagation derivation;
+2. The PyTorch implementation achieves a 3.39$\times$ total training speedup (3,295 s vs. 972 s) and a superior peak HR@10 of 0.615 versus 0.580 for the NumPy baseline; and
+3. The microservices deployment maintains sub-100 ms recommendation latency through Redis caching and isolated model serving.
+
+Several directions are identified for future work. First, the integration of attention mechanisms over the interaction sequence would enable the model to prioritise temporally proximate preferences, addressing the static latent factor limitation of the present architecture. Second, graph neural network-based collaborative filtering (e.g., LightGCN [9]) has demonstrated superior performance on sparse interaction matrices and represents a natural successor architecture. Third, real-time streaming model updates via Apache Kafka and online learning would enable the system to adapt to rapidly shifting user preferences without periodic full retraining. Fourth, the extension of the TMDB integration to retrieve rich content features (cast, director, plot embeddings) would strengthen the content-based cold-start component. Finally, a formal user study evaluating the perceived recommendation quality of the Netflix-style interface would provide complementary qualitative validation of the system's practical utility.
+
+## ACKNOWLEDGMENT
+
+The author acknowledges the use of AI-assisted tools—specifically Claude (Anthropic) and Google Gemini—for structural guidance, language refinement, and code review during the preparation of this manuscript. All technical design decisions, mathematical derivations, experimental implementations, and empirical analyses were conducted solely by the author. The AI tools did not contribute original research findings or make independent intellectual contributions to the work. This disclosure is made in accordance with IEEE guidelines on the responsible use of AI in research.
+
+The author also thanks the anonymous reviewers for their constructive feedback, and acknowledges the MovieLens dataset [13] as the primary experimental resource.
+
+## REFERENCES
+
+1. X. He, L. Liao, H. Zhang, L. Nie, X. Hu, and T.-S. Chua, "Neural Collaborative Filtering," in _Proc. 26th Int. Conf. World Wide Web (WWW)_, Perth, Australia, 2017, pp. 173–182.
+2. Y. Koren, R. Bell, and C. Volinsky, "Matrix Factorization Techniques for Recommender Systems," _Computer_, vol. 42, no. 8, pp. 30–37, Aug. 2009.
+3. J. S. Breese, D. Heckerman, and C. Kadie, "Empirical Analysis of Predictive Algorithms for Collaborative Filtering," in _Proc. 14th Conf. Uncertainty Artif. Intell. (UAI)_, Madison, WI, 1998, pp. 43–52.
+4. R. Salakhutdinov and A. Mnih, "Probabilistic Matrix Factorization," in _Advances in Neural Information Processing Systems (NIPS)_, vol. 20, 2007, pp. 1257–1264.
+5. R. Salakhutdinov, A. Mnih, and G. Hinton, "Restricted Boltzmann Machines for Collaborative Filtering," in _Proc. 24th Int. Conf. Mach. Learn. (ICML)_, Corvallis, OR, 2007, pp. 791–798.
+6. S. Sedhain, A. K. Menon, S. Sanner, and L. Xie, "AutoRec: Autoencoders Meet Collaborative Filtering," in _Proc. 24th Int. Conf. World Wide Web (WWW)_, Florence, Italy, 2015, pp. 111–112.
+7. H. Wang, N. Wang, and D.-Y. Yeung, "Collaborative Deep Learning for Recommender Systems," in _Proc. 21st ACM SIGKDD Int. Conf. Knowledge Discovery and Data Mining_, Sydney, Australia, 2015, pp. 1235–1244.
+8. F. Feng, X. He, J. Tang, and T.-S. Chua, "Graph Adversarial Training: Dynamically Regularizing Based on Graph Structure," _IEEE Trans. Knowl. Data Eng._, vol. 33, no. 6, pp. 2493–2504, Jun. 2021.
+9. X. He, K. Deng, X. Wang, Y. Li, Y. Zhang, and M. Wang, "LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation," in _Proc. 43rd Int. ACM SIGIR Conf. Research and Development in Information Retrieval_, Xi'an, China, 2020, pp. 639–648.
+10. J. Zhou, G. Cui, S. Hu, Z. Zhang, C. Yang, Z. Liu, L. Wang, C. Li, and M. Sun, "Graph Neural Networks: A Review of Methods and Applications," _AI Open_, vol. 1, pp. 57–81, 2020.
+11. H.-T. Cheng et al., "Wide & Deep Learning for Recommender Systems," in _Proc. 1st Workshop Deep Learning Recommender Systems (DLRS)_, Boston, MA, 2016, pp. 7–10.
+12. P. Covington, J. Adams, and E. Sargin, "Deep Neural Networks for YouTube Recommendations," in _Proc. 10th ACM Conf. Recommender Systems (RecSys)_, Boston, MA, 2016, pp. 191–198.
+13. F. M. Harper and J. A. Konstan, "The MovieLens Datasets: History and Context," _ACM Trans. Interact. Intell. Syst._, vol. 5, no. 4, pp. 19:1–19:19, Jan. 2016.
+14. S. Rendle, C. Freudenthaler, Z. Gantner, and L. Schmidt-Thieme, "BPR: Bayesian Personalized Ranking from Implicit Feedback," in _Proc. 25th Conf. Uncertainty Artif. Intell. (UAI)_, Montreal, Canada, 2009, pp. 452–461.
+15. J. Johnson, M. Douze, and H. Jégou, "Billion-Scale Similarity Search with GPUs," _IEEE Trans. Big Data_, vol. 7, no. 3, pp. 535–547, Jul. 2021.
+16. FastAPI Documentation, Tiangolo, 2023. [Online]. Available: https://fastapi.tiangolo.com
+17. PyTorch Documentation, Meta AI, 2023. [Online]. Available: https://pytorch.org/docs
