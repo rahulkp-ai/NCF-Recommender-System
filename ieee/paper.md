@@ -198,3 +198,11 @@ Figure 3 presents the total and per-epoch training time comparison between the t
 The primary source of the PyTorch speedup is the MPS backend's ability to dispatch matrix multiplications to the Apple Silicon neural engine, which executes them using 16-bit mixed-precision arithmetic with hardware-level parallelism across thousands of multiply-accumulate units. In contrast, the NumPy implementation processes matrix operations sequentially through the CPU BLAS routines, which—while themselves optimised—cannot match the throughput of the dedicated neural engine for the batch sizes employed. The consistent 3.4$\times$ speedup across epochs confirms that the per-epoch computational profile is dominated by the embedding lookup and MLP forward/backward passes, rather than by Python-level overhead.
 
 ![Total training time breakdown over 20 epochs (seconds). Scratch NCF (NumPy): 3,292 s. PyTorch NCF (MPS): 969 s. The 3.39× ratio reflects the difference in computational substrate: CPU BLAS vs. Apple Silicon MPS hardware acceleration.](images/05%20Training%20Efficiency%2020%20epochs.png){width=\columnwidth}
+
+### D. Summary Benchmark and Composite Analysis
+
+Figure 6 presents a composite benchmark panel including loss convergence, HR@10 trajectories, per-epoch speedup ratios, and a summary comparison table. The mean per-epoch speedup of 3.4× (dashed line in panel C) confirms the consistency of the hardware acceleration benefit
+
+![NCF Benchmark: composite analysis panel. (A) Loss convergence curves confirming equivalent learning behaviour. (B) HR@10 trajectories showing PyTorch NCF superiority at peak quality. (C) Per-epoch speedup ratios, mean 3.4×. (D) Summary comparison table: final loss 0.22 (Scratch) vs. 0.2307 (PyTorch), best HR@10 0.580 vs. 0.615, total training time 3,294 8 s vs. 972.1 s.](images/06%20NCF%20Benchmark%20Scratch%20vs%20PyTorch.png){width=\columnwidth}
+
+Table I presents a consolidated numerical summary of the key benchmarking results.
