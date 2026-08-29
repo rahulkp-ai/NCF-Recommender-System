@@ -1,6 +1,6 @@
 # `thesis/`
 
-MSc thesis materials: 14 phase notebooks documenting the full research
+MSc thesis materials: 14 phase documenting the full research
 process from dataset analysis through final hybrid model evaluation, plus
 the compiled thesis PDF(s).
 
