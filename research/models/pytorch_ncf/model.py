@@ -1,5 +1,5 @@
 """
-models/pytorch_ncf/model.py
+research/models/pytorch_ncf/model.py
 
 NCF implemented in PyTorch — identical architecture to ScratchNCF.
 
@@ -15,6 +15,7 @@ MPS (Apple Silicon) acceleration is enabled automatically when available.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 def get_device() -> torch.device:
@@ -22,6 +23,8 @@ def get_device() -> torch.device:
     if torch.backends.mps.is_available():
         return torch.device("mps")
     return torch.device("cpu")
+
+
 
 
 class PyTorchNCF(nn.Module):
@@ -41,13 +44,11 @@ class PyTorchNCF(nn.Module):
         self,
         n_users: int,
         n_items: int,
-        emb_dim: int = 32,
-        hidden: list[int] | None = None,
-        dropout: float = 0.0,
+        emb_dim: int        = 32,
+        hidden:  list[int]  = [64, 32],
+        dropout: float      = 0.0,
     ):
         super().__init__()
-        if hidden is None:
-            hidden = [64, 32]
 
         self.n_users = n_users
         self.n_items = n_items
@@ -59,8 +60,8 @@ class PyTorchNCF(nn.Module):
 
         # ── MLP layers ────────────────────────────────────────────────
         layer_sizes = [2 * emb_dim] + hidden
-        mlp_layers = []
-        for in_sz, out_sz in zip(layer_sizes[:-1], layer_sizes[1:], strict=False):
+        mlp_layers  = []
+        for in_sz, out_sz in zip(layer_sizes[:-1], layer_sizes[1:]):
             mlp_layers.append(nn.Linear(in_sz, out_sz))
             mlp_layers.append(nn.ReLU())
             if dropout > 0:
@@ -75,16 +76,21 @@ class PyTorchNCF(nn.Module):
 
     def _init_weights(self):
         """He (Kaiming) initialisation for all linear layers and embeddings."""
-        nn.init.kaiming_normal_(self.user_emb.weight, mode="fan_in", nonlinearity="relu")
-        nn.init.kaiming_normal_(self.item_emb.weight, mode="fan_in", nonlinearity="relu")
+        nn.init.kaiming_normal_(self.user_emb.weight, mode="fan_in",
+                                nonlinearity="relu")
+        nn.init.kaiming_normal_(self.item_emb.weight, mode="fan_in",
+                                nonlinearity="relu")
         for module in self.mlp.modules():
             if isinstance(module, nn.Linear):
-                nn.init.kaiming_normal_(module.weight, mode="fan_in", nonlinearity="relu")
+                nn.init.kaiming_normal_(module.weight, mode="fan_in",
+                                        nonlinearity="relu")
                 nn.init.zeros_(module.bias)
-        nn.init.kaiming_normal_(self.output.weight, mode="fan_in", nonlinearity="relu")
+        nn.init.kaiming_normal_(self.output.weight, mode="fan_in",
+                                nonlinearity="relu")
         nn.init.zeros_(self.output.bias)
 
-    def forward(self, user_ids: torch.Tensor, item_ids: torch.Tensor) -> torch.Tensor:
+    def forward(self, user_ids: torch.Tensor,
+                item_ids: torch.Tensor) -> torch.Tensor:
         """
         Batch forward pass.
 
@@ -97,15 +103,16 @@ class PyTorchNCF(nn.Module):
         -------
         logits   : FloatTensor shape (B,)  — pre-sigmoid scores
         """
-        p_u = self.user_emb(user_ids)  # (B, k)
-        q_i = self.item_emb(item_ids)  # (B, k)
+        p_u = self.user_emb(user_ids)          # (B, k)
+        q_i = self.item_emb(item_ids)          # (B, k)
 
-        z0 = torch.cat([p_u, q_i], dim=1)  # (B, 2k)
-        hidden = self.mlp(z0)  # (B, h_last)
-        logits = self.output(hidden).squeeze(1)  # (B,)
+        z0     = torch.cat([p_u, q_i], dim=1)  # (B, 2k)
+        hidden = self.mlp(z0)                  # (B, h_last)
+        logits = self.output(hidden).squeeze(1) # (B,)
         return logits
 
-    def predict(self, user_ids: torch.Tensor, item_ids: torch.Tensor) -> torch.Tensor:
+    def predict(self, user_ids: torch.Tensor,
+                item_ids: torch.Tensor) -> torch.Tensor:
         """Inference mode — returns probabilities ŷ ∈ [0,1]."""
         with torch.no_grad():
             return torch.sigmoid(self.forward(user_ids, item_ids))
@@ -114,7 +121,5 @@ class PyTorchNCF(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
     def __repr__(self):
-        return (
-            f"PyTorchNCF(n_users={self.n_users}, n_items={self.n_items}, "
-            f"emb_dim={self.emb_dim}, params={self.count_parameters():,})"
-        )
+        return (f"PyTorchNCF(n_users={self.n_users}, n_items={self.n_items}, "
+                f"emb_dim={self.emb_dim}, params={self.count_parameters():,})")
