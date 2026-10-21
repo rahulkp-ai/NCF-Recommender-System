@@ -226,7 +226,7 @@ specific trigger condition for each:
 **RAHUL KP KURUP**
 
 - MSc Computer Science
-- AI/ML Engineer (Aspiring)
+- AI/ML Engineer
 
 ---
 
