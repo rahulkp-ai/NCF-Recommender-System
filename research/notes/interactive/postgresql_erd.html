@@ -1,0 +1,114 @@
+<div id="erd" style="display: flex; justify-content: center; padding: 1.5rem 0; width: 100%;"></div>
+
+<style>
+  /* Explicit overrides to guarantee absolute text and background visibility */
+  #erd svg.erDiagram {
+    max-width: 100%;
+    height: auto;
+  }
+  #erd svg.erDiagram .entityName {
+    font-weight: bold !important;
+  }
+  /* Force attribute labels and types to have deep contrast */
+  #erd svg.erDiagram text.attribute-label, 
+  #erd svg.erDiagram text.attribute-type {
+    fill: #0f172a !important;
+    font-weight: 500 !important;
+  }
+  /* Strip individual cell path borders without making the backgrounds invisible */
+  #erd svg.erDiagram .row-rect-odd path, 
+  #erd svg.erDiagram .row-rect-even path {
+    stroke: none !important;
+  }
+  
+  /* Dark mode overrides */
+  @media (prefers-color-scheme: dark) {
+    #erd svg.erDiagram text.attribute-label, 
+    #erd svg.erDiagram text.attribute-type {
+      fill: #f8fafc !important;
+    }
+  }
+</style>
+
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '14px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    
+    // Core Layout Elements
+    lineColor: dark ? '#94a3b8' : '#475569', 
+    textColor: dark ? '#f8fafc' : '#0f172a',
+    
+    // Table Headers (Entities)
+    primaryColor: dark ? '#1e293b' : '#f8fafc',
+    primaryTextColor: dark ? '#38bdf8' : '#0284c7', // Distinct colored headers
+    primaryBorderColor: dark ? '#475569' : '#cbd5e1',
+    
+    // Internal Table Attributes
+    attributeBackgroundColor: dark ? '#0f172a' : '#ffffff',
+    attributeColor: dark ? '#f8fafc' : '#0f172a',
+  },
+});
+
+const { svg } = await mermaid.render('erd-svg', `erDiagram
+  users ||--o{ interactions : "makes"
+  movies ||--o{ interactions : "receives"
+  users {
+    int id PK
+    string username
+    string age_group
+    string gender
+    int occupation
+    datetime created_at
+  }
+  movies {
+    int id PK
+    string title
+    string genres
+    int tmdb_id
+    string poster_url
+    int year
+  }
+  interactions {
+    int id PK
+    int user_id FK
+    int movie_id FK
+    string event_type
+    float rating
+    datetime created_at
+  }`);
+
+const container = document.getElementById('erd');
+container.innerHTML = svg;
+
+// Transform outer box paths to clean rounded rectangles safely
+document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+</script>

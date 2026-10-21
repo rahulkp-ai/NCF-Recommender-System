@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCF Embedding Space Explorer</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    color: #222;
+    background: #fff;
+}
+
+h1 {
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.emb-grid {
+    display: grid;
+    gap: 4px;
+    margin: 12px 0;
+}
+
+.emb-cell {
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.emb-label {
+    font-size: 13px;
+    color: #555;
+    margin: 10px 0 6px;
+    font-weight: 600;
+}
+
+.sim-bar {
+    height: 10px;
+    border-radius: 5px;
+    background: #e5e5e5;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.sim-fill {
+    height: 100%;
+    background: #1D9E75;
+    width: 50%;
+    transition: width 0.4s ease;
+}
+
+.metric {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 8px 0;
+}
+
+.metric-small {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 8px 0;
+}
+
+.card {
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+button {
+    background: #1D9E75;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.note {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+input[type="range"] {
+    flex: 1;
+}
+
+#interp {
+    line-height: 1.7;
+    color: #555;
+    font-size: 14px;
+}
+
+.info-box {
+    margin-top: 18px;
+    padding: 12px;
+    border-left: 4px solid #1D9E75;
+    background: #f7fbfa;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<h1>Interactive NCF Embedding Space Explorer</h1>
+
+<p class="subtitle">
+Explore how user and item embeddings interact inside a Neural Collaborative Filtering (NCF) model.
+Before training, embeddings are random noise. After training, similar users and items become aligned in latent space.
+</p>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="card">
+
+        <div class="emb-label">Embedding Dimension (k)</div>
+
+        <div class="slider-row">
+            <input
+                type="range"
+                min="2"
+                max="64"
+                step="2"
+                value="8"
+                id="k-slider"
+                oninput="updateK(this.value)">
+            <span id="k-val">8</span>
+        </div>
+
+        <div class="emb-label">
+            User Embedding Vector \(p_u\)
+        </div>
+
+        <div class="emb-grid" id="user-emb"></div>
+
+        <div class="emb-label">
+            Item Embedding Vector \(q_i\)
+        </div>
+
+        <div class="emb-grid" id="item-emb"></div>
+
+        <button onclick="randomize()">
+            Generate New Random Embeddings
+        </button>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="card">
+
+        <div class="emb-label">
+            Cosine Similarity
+        </div>
+
+        <div id="cos-val" class="metric">0.000</div>
+
+        <div class="sim-bar">
+            <div class="sim-fill" id="sim-fill"></div>
+        </div>
+
+        <div class="note">
+            -1 = opposite directions &nbsp; • &nbsp;
+            0 = orthogonal &nbsp; • &nbsp;
+            +1 = identical directions
+        </div>
+
+        <div class="emb-label" style="margin-top:18px;">
+            Dot Product \(p_u \cdot q_i\)
+        </div>
+
+        <div id="dot-val" class="metric-small">0.000</div>
+
+        <div class="emb-label">
+            Interpretation
+        </div>
+
+        <div id="interp">
+            —
+        </div>
+
+        <div class="info-box">
+            <strong>NCF Insight:</strong><br>
+            In Neural Collaborative Filtering, embeddings are concatenated and passed through an MLP. Similarity often correlates with preference, but the network ultimately learns nonlinear user–item interactions.
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let k = 8;
+let userEmbedding = [];
+let itemEmbedding = [];
+
+function randVec(size) {
+    return Array.from(
+        { length: size },
+        () => Number((Math.random() * 2 - 1).toFixed(2))
+    );
+}
+
+function dot(a, b) {
+    return a.reduce((sum, val, idx) => sum + val * b[idx], 0);
+}
+
+function cosine(a, b) {
+
+    const dp = dot(a, b);
+
+    const normA = Math.sqrt(
+        a.reduce((s, v) => s + v * v, 0)
+    );
+
+    const normB = Math.sqrt(
+        b.reduce((s, v) => s + v * v, 0)
+    );
+
+    if (normA === 0 || normB === 0) {
+        return 0;
+    }
+
+    return dp / (normA * normB);
+}
+
+function colorForValue(v) {
+
+    if (v > 0.3) return "#1D9E75";
+
+    if (v < -0.3) return "#D85A30";
+
+    return "#888780";
+}
+
+function renderVector(id, vector) {
+
+    const container =
+        document.getElementById(id);
+
+    container.innerHTML = "";
+
+    container.style.gridTemplateColumns =
+        `repeat(${Math.min(k, 8)}, 1fr)`;
+
+    vector.forEach(value => {
+
+        const cell =
+            document.createElement("div");
+
+        cell.className = "emb-cell";
+
+        const color =
+            colorForValue(value);
+
+        cell.style.background =
+            color + "22";
+
+        cell.style.border =
+            `1px solid ${color}44`;
+
+        cell.style.color =
+            color;
+
+        cell.textContent =
+            value.toFixed(2);
+
+        container.appendChild(cell);
+    });
+}
+
+function updateDisplay() {
+
+    renderVector(
+        "user-emb",
+        userEmbedding
+    );
+
+    renderVector(
+        "item-emb",
+        itemEmbedding
+    );
+
+    const cos =
+        cosine(
+            userEmbedding,
+            itemEmbedding
+        );
+
+    const dp =
+        dot(
+            userEmbedding,
+            itemEmbedding
+        );
+
+    document.getElementById(
+        "cos-val"
+    ).textContent =
+        cos.toFixed(3);
+
+    document.getElementById(
+        "dot-val"
+    ).textContent =
+        dp.toFixed(3);
+
+    const width =
+        ((cos + 1) / 2) * 100;
+
+    document.getElementById(
+        "sim-fill"
+    ).style.width =
+        width + "%";
+
+    let interpretation = "";
+
+    if (cos > 0.6) {
+
+        interpretation =
+            "High similarity. User and item occupy nearby regions of latent space. This often corresponds to stronger predicted affinity.";
+
+    } else if (cos > 0.2) {
+
+        interpretation =
+            "Moderate similarity. Some preference alignment exists between user and item.";
+
+    } else if (cos > -0.2) {
+
+        interpretation =
+            "Low similarity. User and item are nearly orthogonal, providing a weak interaction signal.";
+
+    } else {
+
+        interpretation =
+            "Negative similarity. User and item point in different latent directions and are less likely to be associated.";
+
+    }
+
+    document.getElementById(
+        "interp"
+    ).textContent =
+        interpretation;
+}
+
+function randomize() {
+
+    userEmbedding =
+        randVec(k);
+
+    itemEmbedding =
+        randVec(k);
+
+    updateDisplay();
+}
+
+function updateK(value) {
+
+    k = parseInt(value);
+
+    document.getElementById(
+        "k-val"
+    ).textContent = k;
+
+    randomize();
+}
+
+randomize();
+
+</script>
+
+</body>
+</html>
