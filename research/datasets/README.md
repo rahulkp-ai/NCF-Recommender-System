@@ -1,8 +1,5 @@
 # `research/datasets/`
 
-Renamed from `research/data/` in Phase 4 (to avoid a naming collision
-with `production/artifacts/` — see `docs/decisions/0003`).
-
 - `raw/movielens/ml-1m/` — the original MovieLens-1M files (`movies.dat`,
   `ratings.dat`, `users.dat`), the original `.zip`, and its `README`.
   6,040 users, 3,706 movies (see `production/artifacts/meta.json` for

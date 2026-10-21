@@ -75,3 +75,4 @@ logs/
 *.bak
 *.tmp
 *next-env.d.ts
+COMPLETE_PROJECT_TREE.md
