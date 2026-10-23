@@ -236,4 +236,4 @@ This project demonstrates:
 
 - Deep understanding of recommendation systems
 - Strong ML fundamentals
-- Production-level engineering skills
+- Production-level engineering skill
