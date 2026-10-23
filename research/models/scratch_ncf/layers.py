@@ -1,14 +1,12 @@
 """
-research/models/scratch_ncf/layers.py
+models/scratch_ncf/layers.py
 
-Linear layer and activation functions with full forward/backward support.
-
-Each layer stores its inputs during forward pass — these are needed
+Linear layer and activation functions with full forward and backward support.
+Each layer stores its inputs during forward pass - these are needed
 to compute weight gradients during backward pass.
 """
 
 import numpy as np
-
 
 class LinearLayer:
     """
@@ -27,7 +25,6 @@ class LinearLayer:
     dW : (out_features, in_features)  — gradient of L w.r.t. W
     db : (out_features,)              — gradient of L w.r.t. b
     """
-
     def __init__(self, in_features: int, out_features: int, seed: int = 0):
         rng = np.random.default_rng(seed)
 
@@ -39,19 +36,26 @@ class LinearLayer:
         self.dW = np.zeros_like(self.W)
         self.db = np.zeros_like(self.b)
 
-        # Cached input for backward pass
+        # Cache for backward pass
         self._x: np.ndarray | None = None
 
+    
     # ── Forward ──────────────────────────────────────────────────────────────
 
-    def forward(self, x: np.ndarray) -> np.ndarray:
+    def forward(self, x: np.ndarray) -> np.array:
         """
         z = W @ x + b
-        """
-        self._x = x.copy()  # cache for backward
-        return self.W @ x + self.b  # shape (out_features,)
 
-    # ── Backward ─────────────────────────────────────────────────────────────
+        Parameters
+        ----------
+        x : ndarray shape (in_features,)
+
+        Returns
+        -------
+        z : ndarray shape (out_features,)
+        """
+        self._x = x.copy()                  # cache for backward
+        return self.W @ x + self.b          # shape (out_features,)
 
     def backward(self, delta: np.ndarray) -> np.ndarray:
         """
@@ -59,52 +63,46 @@ class LinearLayer:
           dL/dW = delta ⊗ x^T   (outer product)
           dL/db = delta
           dL/dx = W^T @ delta   (passed to previous layer)
+
+        Parameters
+        ----------
+        delta : ndarray shape (out_features,) — gradient from layer above
+
+        Returns
+        -------
+        dx : ndarray shape (in_features,) — gradient to pass downstream
         """
         assert self._x is not None, "Call forward() before backward()"
 
-        # Ensure delta is at least 1D (handles scalar inputs from output layer)
-        delta = np.atleast_1d(delta)
-
         # Accumulate parameter gradients
-        # np.outer handles (out,) and (in,) to create (out, in) matrix
-        grad_w = np.outer(delta, self._x)
-
-        if self.dW.shape != grad_w.shape:
-            raise ValueError(
-                f"Shape mismatch: dW is {self.dW.shape}, grad is {grad_w.shape}. "
-                f"Check layer dimensions or backward loop order."
-            )
-
-        self.dW += grad_w
-        self.db += delta
+        self.dW += np.outer(delta, self._x)  # (out, in)
+        self.db += delta                      # (out,)
 
         # Gradient to pass to previous layer
-        dx = self.W.T @ delta  # (in_features,)
+        dx = self.W.T @ delta                 # (in,)
         return dx
-
+    
     def zero_grad(self) -> None:
         self.dW[:] = 0.0
         self.db[:] = 0.0
         self._x = None
 
     def __repr__(self):
-        return f"LinearLayer(in={self.W.shape[1]}, out={self.W.shape[0]})"
+        return (f"LinearLayer(in={self.W.shape[1]}, "
+                f"out={self.W.shape[0]})")
 
-
-# ── Activation functions ──────────────────────────────────────────────────────
-
-
+    # ── Activation functions ──────────────────────────────────────────────────────
 class ReLU:
     """
     ReLU(x) = max(0, x)
-    Derivative: 1 if x > 0, else 0
+    Derivative: 1 if x > 0, else 0  (the 'mask')
     """
 
     def __init__(self):
         self._mask: np.ndarray | None = None
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        self._mask = (x > 0).astype(float)
+        self._mask = (x > 0).astype(float)  # 1 where active, 0 where dead
         return x * self._mask
 
     def backward(self, delta: np.ndarray) -> np.ndarray:
@@ -112,20 +110,26 @@ class ReLU:
         assert self._mask is not None
         return delta * self._mask
 
-    def zero_grad(self):
+    def zero_grad(self) -> None:
         self._mask = None
-
+    
+    def __repr__(self):
+        return "ReLU()"
 
 class Sigmoid:
     """
     σ(x) = 1 / (1 + exp(-x))
+    Derivative: σ(x) · (1 − σ(x))
+
+    Note: When combined with BCE loss the gradient simplifies to (ŷ − y).
+    We keep the standalone version here for clarity and testing.
     """
 
     def __init__(self):
         self._out: np.ndarray | None = None
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        # Numerically stable clip
+        # Numerically stable: clip to avoid overflow in exp
         x_clipped = np.clip(x, -500, 500)
         out = 1.0 / (1.0 + np.exp(-x_clipped))
         self._out = out
@@ -133,7 +137,6 @@ class Sigmoid:
 
     def backward(self, delta: np.ndarray) -> np.ndarray:
         s = self._out
-        assert s is not None
         return delta * s * (1.0 - s)
 
     def zero_grad(self):
