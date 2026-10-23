@@ -1,26 +1,26 @@
 """
-research/models/scratch_ncf/loss.py
+models/scratch_ncf/loss.py
 
-Binary Cross-Entropy loss with numerically stable implementation.
+Binary Cross-Entropy loss with numerically stable implementation
 
-BCE(y, ŷ) = -[y·log(ŷ) + (1−y)·log(1−ŷ)]
+BCE(y, yhat) = -[y * log(yhat) + (1 - y) * log(1 - yhat)]
 
-The combined sigmoid+BCE gradient is:  dL/d(logit) = ŷ − y
+The combined sigmoid+BCE gradient is dL / d(logit) = yhat - y
 This is the most important simplification in the whole model.
+
 """
 
 import numpy as np
 
-
 class BCELoss:
     """
-    Binary Cross-Entropy loss.
+    Binary Cross-Entropy loss
 
     We operate on the raw logit (pre-sigmoid output) for numerical stability.
-    Internally applies sigmoid, computes loss, and stores the clean gradient.
+    Internally applies sigmoid, compute loss, and stores the clean gradient.
     """
 
-    EPS = 1e-12  # prevent log(0)
+    EPS = 1e-12
 
     def __init__(self):
         self._y_hat: float | None = None
@@ -28,7 +28,7 @@ class BCELoss:
 
     # ── Forward ──────────────────────────────────────────────────────────────
 
-    def forward(self, logit: float, y: float) -> float:
+    def forward(self, logit: float, y:float) -> float:
         """
         Parameters
         ----------
@@ -44,11 +44,11 @@ class BCELoss:
         self._y_hat = y_hat
         self._y = y
 
-        loss = -(y * np.log(y_hat + self.EPS) + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
-        return float(loss)
-
-    # ── Backward ─────────────────────────────────────────────────────────────
-
+        # Compute numerically stable BCE loss
+        loss = -(y * np.log(y_hat + self.EPS)
+                + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
+        return loss
+    
     def backward(self) -> float:
         """
         Gradient of BCE loss w.r.t. the LOGIT (pre-sigmoid value).
@@ -60,8 +60,14 @@ class BCELoss:
 
         This is why we compute BCE on the logit, not on ŷ directly.
         """
-        return self._y_hat - self._y  # scalar
-
+        if self._y_hat is None or self._y is None:
+            raise ValueError("forward() must be called before backward()")
+        
+        return self._y_hat - self._y        # scalar
+    
     def zero_grad(self):
+        """
+        Reset stored values for the next forward pass.
+        """
         self._y_hat = None
         self._y = None
