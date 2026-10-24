@@ -85,4 +85,4 @@ Currently manual (copy `evaluation/`'s weights + `datasets/processed/`'s
 engine pickles into `production/artifacts/`) — a `scripts/export_model.py`
 bridge is planned, see `ROADMAP.md`. Until then, re-run
 `evaluation/compare.py` and check `benchmark_summary.ipynb`'s numbers
-before promoting a new checkpoint.
+before promoting a new checkpoint
