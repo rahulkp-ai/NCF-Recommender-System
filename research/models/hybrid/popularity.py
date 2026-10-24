@@ -13,6 +13,23 @@ from .cold_start import PopularityEngine, ContentEngine
 CACHE_DIR = Path("data/processed")
 
 
+def _register_pickle_compat() -> None:
+    """Resolve cached engines saved under the former research.hybrid module path."""
+    import research
+
+    from . import cold_start
+
+    legacy_package = sys.modules.get("research.hybrid")
+    if legacy_package is None:
+        legacy_package = types.ModuleType("research.hybrid")
+        legacy_package.__path__ = []
+        sys.modules["research.hybrid"] = legacy_package
+
+    legacy_package.cold_start = cold_start
+    research.hybrid = legacy_package
+    sys.modules["research.hybrid.cold_start"] = cold_start
+
+
 def build_and_save_engines(
     interactions_path: str = "data/processed/train.csv",
     movies_path:       str = "data/raw/movielens/ml-1m/movies.dat",
