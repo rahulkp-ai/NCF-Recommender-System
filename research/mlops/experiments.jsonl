@@ -20,3 +20,25 @@
 {"run_id": "b774d9a9", "type": "epoch", "epoch": 19, "loss": 0.2318702924467739, "hit_at_10": 0.57, "ts": 1792588178.0174851}
 {"run_id": "b774d9a9", "type": "epoch", "epoch": 20, "loss": 0.2301469108693958, "hit_at_10": 0.58, "ts": 1792588230.404591}
 {"run_id": "b774d9a9", "type": "finish", "finished": "2026-10-21T13:10:30.405588", "best_hit_at_10": 0.62, "n_epochs": 20, "total_time_sec": 3557.138633966446}
+{"run_id": "88baaf61", "name": "pytorch_ncf", "config": {"emb_dim": 32, "hidden": [64, 32], "lr": 0.001}, "started": "2026-10-24T17:11:54.207044", "epochs": [], "status": "running"}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 1, "loss": 0.36583335461394156, "hit_at_10": 0.405, "ts": 1792861968.912543}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 2, "loss": 0.3500161823089876, "hit_at_10": 0.425, "ts": 1792862023.085289}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 3, "loss": 0.3244920172345453, "hit_at_10": 0.52, "ts": 1792862077.411715}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 4, "loss": 0.30193608912470427, "hit_at_10": 0.56, "ts": 1792862130.013186}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 5, "loss": 0.2891376559166093, "hit_at_10": 0.55, "ts": 1792862189.274957}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 6, "loss": 0.27993039447717716, "hit_at_10": 0.585, "ts": 1792862244.210868}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 7, "loss": 0.2728819101029727, "hit_at_10": 0.595, "ts": 1792862297.791672}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 8, "loss": 0.2670606120417155, "hit_at_10": 0.57, "ts": 1792862348.780257}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 9, "loss": 0.2620734454127791, "hit_at_10": 0.57, "ts": 1792862404.390018}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 10, "loss": 0.25750487092863095, "hit_at_10": 0.57, "ts": 1792862458.316737}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 11, "loss": 0.2534495123433326, "hit_at_10": 0.575, "ts": 1792862513.2372742}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 12, "loss": 0.24978974732401457, "hit_at_10": 0.59, "ts": 1792862567.647027}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 13, "loss": 0.24652133411076402, "hit_at_10": 0.585, "ts": 1792862622.4201531}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 14, "loss": 0.2435751408215014, "hit_at_10": 0.58, "ts": 1792862675.172747}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 15, "loss": 0.2407961411395839, "hit_at_10": 0.57, "ts": 1792862730.808335}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 16, "loss": 0.2383943297733297, "hit_at_10": 0.555, "ts": 1792862784.693931}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 17, "loss": 0.23609451444655502, "hit_at_10": 0.57, "ts": 1792862839.7007868}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 18, "loss": 0.23404744779816564, "hit_at_10": 0.55, "ts": 1792862893.749256}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 19, "loss": 0.23217771342690127, "hit_at_10": 0.565, "ts": 1792862947.2691112}
+{"run_id": "88baaf61", "type": "epoch", "epoch": 20, "loss": 0.23039572343925122, "hit_at_10": 0.57, "ts": 1792863004.167846}
+{"run_id": "88baaf61", "type": "finish", "finished": "2026-10-24T17:30:04.169572", "best_hit_at_10": 0.595, "n_epochs": 20, "total_time_sec": 1089.2533588409424}
