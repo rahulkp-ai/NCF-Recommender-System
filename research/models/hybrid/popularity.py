@@ -6,6 +6,8 @@ Used by the FastAPI recommendation service in Phase 7.
 """
 
 import pickle
+import sys
+import types
 from pathlib import Path
 
 import pandas as pd
@@ -13,6 +15,23 @@ import pandas as pd
 from .cold_start import ContentEngine, PopularityEngine
 
 CACHE_DIR = Path("research/datasets/processed")
+
+
+def _register_pickle_compat() -> None:
+    """Resolve cached engines saved under the former research.hybrid module path."""
+    import research
+
+    from . import cold_start
+
+    legacy_package = sys.modules.get("research.hybrid")
+    if legacy_package is None:
+        legacy_package = types.ModuleType("research.hybrid")
+        legacy_package.__path__ = []
+        sys.modules["research.hybrid"] = legacy_package
+
+    legacy_package.cold_start = cold_start
+    research.hybrid = legacy_package
+    sys.modules["research.hybrid.cold_start"] = cold_start
 
 
 def build_and_save_engines(
@@ -49,6 +68,7 @@ def build_and_save_engines(
 
 def load_engines() -> tuple[PopularityEngine, ContentEngine]:
     """Load pre-built engines from disk (fast, used by API at startup)."""
+    _register_pickle_compat()
     with open(CACHE_DIR / "pop_engine.pkl", "rb") as f:
         pop = pickle.load(f)
     with open(CACHE_DIR / "content_engine.pkl", "rb") as f:
