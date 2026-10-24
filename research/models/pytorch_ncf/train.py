@@ -103,21 +103,7 @@ def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
         "precision_at_k": float(np.mean(precisions)),
         "recall_at_k":    float(np.mean(recalls)),
     }
-    
-def hit_at_k(model: PyTorchNCF, df: pd.DataFrame, n_items: int,
-             k: int = 10, n_neg: int = 99, seed: int = 0,
-             device: torch.device = torch.device("cpu")) -> float:
-    """Compute overall Hit@K score across dataframe."""
-    res = evaluate(model, df, n_items, k=k, n_neg=n_neg, seed=seed, device=device)
-    return res["hit_at_k"]
 
-
-def ndcg_at_k(model: PyTorchNCF, df: pd.DataFrame, n_items: int,
-              k: int = 10, n_neg: int = 99, seed: int = 0,
-              device: torch.device = torch.device("cpu")) -> float:
-    """Compute overall NDCG@K score across dataframe."""
-    res = evaluate(model, df, n_items, k=k, n_neg=n_neg, seed=seed, device=device)
-    return res["ndcg_at_k"]
 
 # ── Training Loop ─────────────────────────────────────────────────────────────
 
