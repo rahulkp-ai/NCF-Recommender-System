@@ -18,7 +18,7 @@ import torch
 from pathlib import Path
 from sqlalchemy.orm import Session
 
-from models.pytorch_ncf.model import PyTorchNCF, get_device
+from ..pytorch_ncf.model import PyTorchNCF, get_device
 from .cold_start  import PopularityEngine, ContentEngine
 from .popularity  import load_engines
 
@@ -205,4 +205,3 @@ class HybridEngine:
              "source": "content_similar"}
             for iid in similar
         ]
-
