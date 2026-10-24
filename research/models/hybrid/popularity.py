@@ -10,7 +10,8 @@ import pandas as pd
 from pathlib import Path
 from .cold_start import PopularityEngine, ContentEngine
 
-CACHE_DIR = Path("data/processed")
+RESEARCH_DIR = Path(__file__).resolve().parents[2]
+CACHE_DIR = RESEARCH_DIR / "datasets" / "processed"
 
 
 def _register_pickle_compat() -> None:
@@ -31,8 +32,8 @@ def _register_pickle_compat() -> None:
 
 
 def build_and_save_engines(
-    interactions_path: str = "data/processed/train.csv",
-    movies_path:       str = "data/raw/movielens/ml-1m/movies.dat",
+    interactions_path: str | Path = CACHE_DIR / "train.csv",
+    movies_path:       str | Path = RESEARCH_DIR / "datasets" / "raw" / "movielens" / "ml-1m" / "movies.dat",
 ) -> tuple[PopularityEngine, ContentEngine]:
     """
     Build popularity and content engines from processed data and save to disk.
@@ -55,7 +56,7 @@ def build_and_save_engines(
     with open(CACHE_DIR / "content_engine.pkl", "wb") as f:
         pickle.dump(content_engine, f)
 
-    print("Engines saved to data/processed/")
+    print(f"Engines saved to {CACHE_DIR}/")
     return pop_engine, content_engine
 
 

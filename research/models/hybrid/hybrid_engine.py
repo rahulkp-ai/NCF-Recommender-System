@@ -57,11 +57,20 @@ class HybridEngine:
     # ── Factory ───────────────────────────────────────────────────────────────
 
     @classmethod
-    def load(cls, weights_path: str = "evaluation/pytorch_ncf_weights.pt",
-             meta_path: str = "data/processed/meta.json") -> "HybridEngine":
+    def load(cls, weights_path: str | Path | None = None,
+             meta_path: str | Path | None = None) -> "HybridEngine":
         """Load all components from disk and return a ready engine."""
         import json
-        meta    = json.load(open(meta_path))
+
+        research_dir = Path(__file__).resolve().parents[2]
+        weights_path = Path(weights_path) if weights_path is not None else (
+            research_dir / "evaluation" / "pytorch_ncf_weights.pt"
+        )
+        meta_path = Path(meta_path) if meta_path is not None else (
+            research_dir / "datasets" / "processed" / "meta.json"
+        )
+        with meta_path.open() as metadata_file:
+            meta = json.load(metadata_file)
         n_users = meta["n_users"]
         n_items = meta["n_items"]
 
