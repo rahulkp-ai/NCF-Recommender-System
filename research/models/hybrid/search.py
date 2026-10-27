@@ -1,5 +1,5 @@
 """
-research/hybrid/search.py
+research/models/hybrid/search.py
 
 Title search with hybrid recommendation fallback.
 """
