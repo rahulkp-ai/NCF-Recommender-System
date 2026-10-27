@@ -10,17 +10,25 @@ Implements the exact protocol from He et al. (2017):
 Also implements Precision@K and Recall@K for thesis completeness.
 """
 
-from collections.abc import Callable
-
 import numpy as np
 import pandas as pd
+from pathlib import Path
+from typing import Callable
+
 
 # ── Core ranking metrics ──────────────────────────────────────────────────────
-
 
 def hit_at_k(ranked_list: list, relevant_item: int, k: int) -> float:
     """
     Hit@K: 1 if relevant_item appears in the top-K of ranked_list.
+
+    Parameters
+    ----------
+    ranked_list   : list of item IDs, sorted by predicted score descending
+    relevant_item : the single ground-truth positive item
+    k             : cutoff
+
+    Returns 1.0 or 0.0
     """
     return 1.0 if relevant_item in ranked_list[:k] else 0.0
 
@@ -28,18 +36,20 @@ def hit_at_k(ranked_list: list, relevant_item: int, k: int) -> float:
 def ndcg_at_k(ranked_list: list, relevant_item: int, k: int) -> float:
     """
     NDCG@K: 1/log2(rank+1) if relevant_item is in top-K, else 0.
+
     Maximum value = 1.0 (item at rank 1).
+    Penalises finding the item deep in the top-K list.
     """
     if relevant_item not in ranked_list[:k]:
         return 0.0
-    rank = ranked_list.index(relevant_item) + 1  # 1-indexed
+    rank = ranked_list.index(relevant_item) + 1   # 1-indexed
     return 1.0 / np.log2(rank + 1)
 
 
 def precision_at_k(ranked_list: list, relevant_items: set, k: int) -> float:
     """Fraction of top-K that are relevant."""
     top_k = ranked_list[:k]
-    hits = sum(1 for item in top_k if item in relevant_items)
+    hits  = sum(1 for item in top_k if item in relevant_items)
     return hits / k
 
 
@@ -48,45 +58,60 @@ def recall_at_k(ranked_list: list, relevant_items: set, k: int) -> float:
     if not relevant_items:
         return 0.0
     top_k = ranked_list[:k]
-    hits = sum(1 for item in top_k if item in relevant_items)
+    hits  = sum(1 for item in top_k if item in relevant_items)
     return hits / len(relevant_items)
 
 
 # ── Full evaluation runner ────────────────────────────────────────────────────
 
-
 def evaluate_model(
-    score_fn: Callable[[int, list[int]], np.ndarray],
-    test_df: pd.DataFrame,
-    n_items: int,
-    k: int = 10,
-    n_neg: int = 99,
-    seed: int = 0,
-    verbose: bool = True,
+    score_fn:   Callable[[int, list[int]], np.ndarray],
+    test_df:    pd.DataFrame,
+    n_items:    int,
+    k:          int   = 10,
+    n_neg:      int   = 99,
+    seed:       int   = 0,
+    verbose:    bool  = True,
 ) -> dict:
     """
     Run full leave-one-out evaluation.
+
+    Parameters
+    ----------
+    score_fn  : callable(user_id, candidate_items) → ndarray of scores
+                candidate_items is a list of 100 ints (1 pos + 99 neg)
+    test_df   : DataFrame with columns user_id, item_id (one row per user)
+    n_items   : total number of items (for sampling negatives)
+    k         : evaluation cutoff
+    n_neg     : number of negative samples per user
+    seed      : RNG seed for reproducibility
+
+    Returns
+    -------
+    dict with keys: hit_at_k, ndcg_at_k, precision_at_k, recall_at_k,
+                    per_user (list of per-user dicts)
     """
-    rng = np.random.default_rng(seed)
-    hits = []
-    ndcgs = []
-    precs = []
-    recs = []
+    rng      = np.random.default_rng(seed)
+    hits     = []
+    ndcgs    = []
+    precs    = []
+    recs     = []
     per_user = []
 
     for _, row in test_df.iterrows():
-        uid = int(row.user_id)
-        pos_item = int(row.item_id)
+        uid       = int(row.user_id)
+        pos_item  = int(row.item_id)
 
-        # Sample n_neg negatives
-        neg_items = rng.integers(0, n_items, size=n_neg).tolist()
-        candidates = [pos_item] + neg_items  # positive always at index 0
+        # Sample n_neg negatives (may coincidentally include seen items —
+        # acceptable by convention in NCF literature)
+        neg_items  = rng.integers(0, n_items, size=n_neg).tolist()
+        candidates = [pos_item] + neg_items    # positive always at index 0
 
         # Score all candidates
-        scores = score_fn(uid, candidates)  # shape (100,)
+        scores = score_fn(uid, candidates)     # shape (100,)
 
         # Rank descending
-        ranked_idx = np.argsort(-scores)
+        ranked_idx  = np.argsort(-scores)
         ranked_list = [candidates[i] for i in ranked_idx]
 
         # Compute metrics
@@ -95,22 +120,18 @@ def evaluate_model(
         p = precision_at_k(ranked_list, {pos_item}, k)
         r = recall_at_k(ranked_list, {pos_item}, k)
 
-        hits.append(h)
-        ndcgs.append(n)
-        precs.append(p)
-        recs.append(r)
-        per_user.append(
-            {"user_id": uid, "hit": h, "ndcg": n, "pos_rank": ranked_list.index(pos_item) + 1}
-        )
+        hits.append(h); ndcgs.append(n); precs.append(p); recs.append(r)
+        per_user.append({"user_id": uid, "hit": h, "ndcg": n,
+                         "pos_rank": ranked_list.index(pos_item) + 1})
 
     results = {
-        "hit_at_k": round(float(np.mean(hits)), 4),
-        "ndcg_at_k": round(float(np.mean(ndcgs)), 4),
+        "hit_at_k":       round(float(np.mean(hits)),  4),
+        "ndcg_at_k":      round(float(np.mean(ndcgs)), 4),
         "precision_at_k": round(float(np.mean(precs)), 4),
-        "recall_at_k": round(float(np.mean(recs)), 4),
-        "k": k,
-        "n_users": len(test_df),
-        "per_user": per_user,
+        "recall_at_k":    round(float(np.mean(recs)),  4),
+        "k":              k,
+        "n_users":        len(test_df),
+        "per_user":       per_user,
     }
 
     if verbose:
@@ -121,36 +142,3 @@ def evaluate_model(
         print(f"  Recall@{k}    : {results['recall_at_k']:.4f}")
 
     return results
-
-
-# ── Main Execution Block ──────────────────────────────────────────────────────
-"""
-if __name__ == "__main__":
-    # This part runs ONLY when you execute this file directly.
-    
-    print("--- Initializing Mock Evaluation ---")
-    
-    # 1. Create a dummy test set (5 users)
-    dummy_data = {
-        'user_id': [101, 102, 103, 104, 105],
-        'item_id': [500, 600, 700, 800, 900]
-    }
-    df = pd.DataFrame(dummy_data)
-
-    # 2. Create a mock scoring function
-    # In a real scenario, this would be your Neural CF model's .predict()
-    def mock_score_fn(user_id, candidates):
-        # Returns random scores for the sake of demonstration
-        return np.random.uniform(0, 1, size=len(candidates))
-
-    # 3. Run the evaluation
-    results = evaluate_model(
-        score_fn=mock_score_fn,
-        test_df=df,
-        n_items=1000,
-        k=10,
-        n_neg=99
-    )
-    
-    print("\nScript executed successfully.")
-    """
