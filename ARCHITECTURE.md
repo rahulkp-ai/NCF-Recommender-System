@@ -5,7 +5,7 @@ This document outlines the system architecture using Mermaid diagrams for clarit
 ## Two-World Boundary
 
 ```text
-research/    ── export_model.py / promote_dataset.py (planned) -->   production
+research/export_model.py / promote_dataset.py (planned) -->   production
    (never imported by production)                     (never imports research)
 ```
 
