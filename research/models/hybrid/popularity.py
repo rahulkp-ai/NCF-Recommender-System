@@ -1,5 +1,5 @@
 """
-research/hybrid/popularity.py
+research/models/hybrid/popularity.py
 
 Thin wrapper that loads and caches the popularity engine from disk.
 Used by the FastAPI recommendation service.
