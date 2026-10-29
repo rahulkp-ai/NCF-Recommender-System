@@ -1,7 +1,7 @@
 # `research/comparisons/`
 
-Serves the scratch-vs-PyTorch comparison data for interactive viewing —
-distinct from `research/evaluation/compare.py`, which *generates* that
+Serves the scratch-vs-PyTorch comparison data for interactive viewing
+distinct from `research/evaluation/compare.py`, which _generates_ that
 data (see that file's docstring and `research/README.md`).
 
 - `api/compare.py` — a small FastAPI router (`GET /api/compare/data`,
