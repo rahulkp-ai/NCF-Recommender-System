@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { FiSearch, FiBell, FiChevronDown } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
+import { recommendApi } from "../../lib/api";
 
 export default function Navbar() {
   const [scrolled, setScrolled]   = useState(false);
@@ -11,6 +12,29 @@ export default function Navbar() {
   const [searchVal, setSearchVal] = useState("");
   const { user, logout }          = useAuth();
   const router                    = useRouter();
+  const isNCFlix = router.pathname === "/ncflix";
+  const isDashboard = router.pathname === "/dashboard";
+  const [interactionCount, setInteractionCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setInteractionCount(0);
+      return;
+    }
+    recommendApi
+      .forUser(user.id, 1)
+      .then((response) => setInteractionCount(response.data.n_interactions))
+      .catch(() => setInteractionCount(0));
+  }, [user]);
+
+  useEffect(() => {
+    const updateInteractionCount = (event: Event) => {
+      setInteractionCount((event as CustomEvent<number>).detail);
+    };
+    window.addEventListener("ncf-interaction-updated", updateInteractionCount);
+    return () =>
+      window.removeEventListener("ncf-interaction-updated", updateInteractionCount);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -27,6 +51,47 @@ export default function Navbar() {
     }
   };
 
+  if (isDashboard) return null;
+
+  if (isNCFlix) {
+    return (
+      <nav
+        className="sticky top-0 z-50 flex h-[61px] items-center gap-7 border-b border-[#1e1e1e] bg-[#0a0a0a] px-8"
+      >
+        <Link href="/ncflix" className="select-none text-[18px] font-bold text-[#D85A30]">
+          NCFlix
+        </Link>
+        <Link
+          href="/ncflix"
+          className="border-b-2 border-[#fff] py-1 text-sm font-medium text-white"
+        >
+          Home
+        </Link>
+        <Link
+          href="/search"
+          className="border-b-2 border-transparent py-1 text-sm text-[#888]"
+        >
+          Search
+        </Link>
+        <Link
+          href="/dashboard"
+          className="ml-auto text-[13px] text-[#666] no-underline"
+        >
+          Benchmark →
+        </Link>
+        {user ? (
+          <div className="rounded-md border border-[#222] bg-[#111] px-2.5 py-1 text-xs text-[#555]">
+            {user.username} · {interactionCount} interactions
+          </div>
+        ) : (
+          <Link href="/login" className="text-xs text-[#aaa] hover:text-white">
+            Sign in to personalize
+          </Link>
+        )}
+      </nav>
+    );
+  }
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between
@@ -37,7 +102,7 @@ export default function Navbar() {
       <div className="flex items-center gap-8">
         <Link href="/">
           <span className="text-[#E50914] font-black text-3xl tracking-tighter select-none">
-            NETFIX
+            NCFLIX
           </span>
         </Link>
         <div className="hidden md:flex items-center gap-5 text-sm text-gray-300">
