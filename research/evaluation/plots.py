@@ -20,7 +20,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 # Import run_comparison directly to update comparison.json automatically
-from research.evaluation.compare import run_comparison
+from research.evaluation.compare import run_comparison  # noqa: E402
 
 matplotlib.rcParams.update({
     "font.family":       "sans-serif",
@@ -80,7 +80,7 @@ def plot_loss_curves(data: dict = None):
         xy=(epochs[-1], (s_loss[-1] + p_loss[-1]) / 2),
         xytext=(epochs[-1] - 4, (s_loss[-1] + p_loss[-1]) / 2 + 0.015),
         fontsize=9, color="gray",
-        arrowprops=dict(arrowstyle="->", color="gray", lw=0.8),
+        arrowprops={"arrowstyle": "->", "color": "gray", "lw": 0.8},
     )
 
     plt.tight_layout()
@@ -111,8 +111,8 @@ def plot_evaluation_curves(data: dict = None):
         s_pairs = data["scratch"].get(key, data["scratch"].get("hit_at_10", []))
         p_pairs = data["pytorch"].get(key, data["pytorch"].get("hit_at_10", []))
 
-        s_ep, s_val = zip(*s_pairs) if s_pairs else ([], [])
-        p_ep, p_val = zip(*p_pairs) if p_pairs else ([], [])
+        s_ep, s_val = zip(*s_pairs, strict=True) if s_pairs else ([], [])
+        p_ep, p_val = zip(*p_pairs, strict=True) if p_pairs else ([], [])
 
         if s_val:
             ax.plot(s_ep, s_val, color=CORAL, lw=2, marker="o", ms=4, label="Scratch NCF")
@@ -204,7 +204,7 @@ def plot_time_comparison(data: dict = None):
     )
     ax.set_ylabel("Total training time (seconds)")
     ax.set_title(f"Training Efficiency ({speedup}× speedup)")
-    for bar, val in zip(bars, [s_total, p_total]):
+    for bar, val in zip(bars, [s_total, p_total], strict=True):
         ax.text(bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 5,
                 f"{val:.0f}s", ha="center", fontsize=11, fontweight="bold")
@@ -258,7 +258,7 @@ def plot_thesis_summary(data: dict = None):
     for key, col, mk in [("scratch", CORAL, "o"), ("pytorch", TEAL, "s")]:
         pairs = data[key].get("hit_at_10", [])
         if pairs:
-            ep, hit = zip(*pairs)
+            ep, hit = zip(*pairs, strict=True)
             ax2.plot(ep, hit, color=col, lw=2, marker=mk, ms=4,
                      label=f"{key.capitalize()} Hit@10")
     ax2.set_title("(B) Hit@10 Ranking Quality")

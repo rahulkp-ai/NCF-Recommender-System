@@ -57,11 +57,12 @@ def build_dataloader(batch_size: int, device: torch.device) -> DataLoader:
 def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
              n_items: int, k: int = 10,
              n_neg: int = 99, seed: int = 0,
-             device: torch.device = torch.device("cpu")) -> dict:
+             device: torch.device | None = None) -> dict:
     """
     Evaluates Hit@K, NDCG@K, Precision@K, and Recall@K simultaneously.
     Leave-One-Out Protocol: 1 positive item + n_neg negative samples per user.
     """
+    device = device or torch.device("cpu")
     model.eval()
     rng = np.random.default_rng(seed)
 
@@ -112,13 +113,14 @@ def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
 def train(
     n_epochs:   int   = 20,
     emb_dim:    int   = 32,
-    hidden:     list  = [64, 32],
+    hidden:     list | None = None,
     lr:         float = 1e-3,
     batch_size: int   = 1024,
     eval_every: int   = 1,
     seed:       int   = 42,
 ) -> PyTorchNCF:
     """Train PyTorch NCF and log complete metric evaluation data."""
+    hidden = hidden or [64, 32]
     tracker = ExperimentTracker()
     run_id  = tracker.start_run("pytorch_ncf", {"emb_dim": emb_dim,
                                                  "hidden": hidden, "lr": lr})
@@ -133,7 +135,8 @@ def train(
 
     # Data
     loader  = build_dataloader(batch_size, device)
-    meta    = json.load(open(PROC_DIR / "meta.json"))
+    with open(PROC_DIR / "meta.json") as meta_file:
+        meta = json.load(meta_file)
     n_users = meta["n_users"]
     n_items = meta["n_items"]
     val_df  = pd.read_csv(PROC_DIR / "val.csv")

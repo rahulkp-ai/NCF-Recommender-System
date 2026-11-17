@@ -119,7 +119,10 @@ def evaluate_model(
         p = precision_at_k(ranked_list, {pos_item}, k)
         r = recall_at_k(ranked_list, {pos_item}, k)
 
-        hits.append(h); ndcgs.append(n); precs.append(p); recs.append(r)
+        hits.append(h)
+        ndcgs.append(n)
+        precs.append(p)
+        recs.append(r)
         per_user.append({"user_id": uid, "hit": h, "ndcg": n,
                          "pos_rank": ranked_list.index(pos_item) + 1})
 

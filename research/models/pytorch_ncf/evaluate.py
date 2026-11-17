@@ -21,7 +21,8 @@ LOG_DIR  = RESEARCH_DIR / "evaluation"
 
 def full_evaluation(weights_path: str = None) -> dict:
     """Run Hit@10 and NDCG@10 on the full test set."""
-    meta    = json.load(open(PROC_DIR / "meta.json"))
+    with open(PROC_DIR / "meta.json") as meta_file:
+        meta = json.load(meta_file)
     n_users = meta["n_users"]
     n_items = meta["n_items"]
     test_df = pd.read_csv(PROC_DIR / "test.csv")

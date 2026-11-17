@@ -91,7 +91,7 @@ def batch_iter(user: np.ndarray, items: np.ndarray,
 def train(
     n_epochs:   int   = 20,
     emb_dim:    int   = 32,
-    hidden:     list  = [64, 32],
+    hidden:     list | None = None,
     lr:         float = 1e-3,
     batch_size: int   = 512,
     eval_every: int   = 1,
@@ -103,6 +103,7 @@ def train(
     Logs all metrics to evaluation/scratch_ncf_log.json
     so the comparison dashboard can overlay results directly.
     """
+    hidden = hidden or [64, 32]
     tracker = ExperimentTracker()
     run_id  = tracker.start_run("scratch_ncf", {"emb_dim": emb_dim,
                                                  "hidden": hidden, "lr": lr})
@@ -112,7 +113,8 @@ def train(
     print("=" * 60)
 
     # Load data
-    meta    = json.load(open(PROC_DIR / "meta.json"))
+    with open(PROC_DIR / "meta.json") as meta_file:
+        meta = json.load(meta_file)
     n_users = meta["n_users"]
     n_items = meta["n_items"]
 
@@ -158,7 +160,7 @@ def train(
             batch_loss = 0.0
             model.zero_grad()
 
-            for u, i, y in zip(u_batch, i_batch, l_batch):
+            for u, i, y in zip(u_batch, i_batch, l_batch, strict=True):
                 # Forward
                 logit = model.forward(int(u), int(i))
                 loss  = loss_fn.forward(logit, float(y))
@@ -235,8 +237,8 @@ def train(
     np.savez(LOG_DIR / "scratch_ncf_weights.npz",
              user_emb=model.user_emb.W,
              item_emb=model.item_emb.W,
-             **{f"W{i}": l.W for i, l in enumerate(model.linears)},
-             **{f"b{i}": l.b for i, l in enumerate(model.linears)})
+             **{f"W{i}": linear.W for i, linear in enumerate(model.linears)},
+             **{f"b{i}": linear.b for i, linear in enumerate(model.linears)})
     print("Weights saved to evaluation/scratch_ncf_weights.npz")
 
     return model

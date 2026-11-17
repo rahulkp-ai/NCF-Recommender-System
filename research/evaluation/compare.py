@@ -43,14 +43,13 @@ def run_comparison():
     scratch_time   = [e["time_sec"] for e in scratch_log["epochs"]]
 
     # Process PyTorch metrics
-    pytorch_epochs = [e["epoch"] for e in pytorch_log["epochs"]]
     pytorch_loss   = [e["loss"] for e in pytorch_log["epochs"]]
     pytorch_time   = [e["time_sec"] for e in pytorch_log["epochs"]]
 
     # Calculate per-epoch speedup (Scratch Time / PyTorch Time)
     speedups = [
         round(s / p, 2) if p > 0 else 1.0 
-        for s, p in zip(scratch_time, pytorch_time)
+        for s, p in zip(scratch_time, pytorch_time, strict=False)
     ]
     avg_speedup   = round(float(np.mean(speedups)), 2)
     total_speedup = round(scratch_log["total_time_sec"] / pytorch_log["total_time_sec"], 2)

@@ -6,6 +6,8 @@ Used by the FastAPI recommendation service.
 """
 
 import pickle
+import sys
+import types
 from pathlib import Path
 
 import pandas as pd

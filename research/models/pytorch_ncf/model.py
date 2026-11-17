@@ -44,7 +44,7 @@ class PyTorchNCF(nn.Module):
         n_users: int,
         n_items: int,
         emb_dim: int        = 32,
-        hidden:  list[int]  = [64, 32],
+        hidden:  list[int] | None = None,
         dropout: float      = 0.0,
     ):
         super().__init__()
@@ -57,10 +57,12 @@ class PyTorchNCF(nn.Module):
         self.user_emb = nn.Embedding(n_users, emb_dim)
         self.item_emb = nn.Embedding(n_items, emb_dim)
 
+        hidden = hidden or [64, 32]
+
         # ── MLP layers ────────────────────────────────────────────────
         layer_sizes = [2 * emb_dim] + hidden
         mlp_layers  = []
-        for in_sz, out_sz in zip(layer_sizes[:-1], layer_sizes[1:]):
+        for in_sz, out_sz in zip(layer_sizes[:-1], layer_sizes[1:], strict=True):
             mlp_layers.append(nn.Linear(in_sz, out_sz))
             mlp_layers.append(nn.ReLU())
             if dropout > 0:

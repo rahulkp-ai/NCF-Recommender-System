@@ -1,4 +1,4 @@
-"""
+r"""
 research/models/scratch_ncf/forward.py
 
 NCF model: wires embeddings + linear layers into a complete forward pass.
@@ -12,7 +12,7 @@ from .layers import LinearLayer, ReLU
 
 
 class Scratch_NCF:
-    """
+    r"""
     Neural Collaborative Filtering implemented from scratch with NumPy.
 
     Architecture
@@ -37,9 +37,10 @@ class Scratch_NCF:
         n_users:    int,
         n_items:    int,
         emb_dim:    int = 32,
-        hidden:     list[int] = [64, 32],
+        hidden:     list[int] | None = None,
         seed:       int = 42,
     ):
+        hidden = hidden or [64, 32]
         self.n_users    = n_users
         self.n_items    = n_items
         self.emb_dim    = emb_dim
@@ -91,10 +92,7 @@ class Scratch_NCF:
         for idx, linear in enumerate(self.linears):
             z = linear.forward(x)                    # pre-activation
             self._z.append(z)
-            if idx < len(self.relus):                # hidden layers get ReLU
-                x = self.relus[idx].forward(z)
-            else:                                    # output layer — no activation
-                x = z
+            x = self.relus[idx].forward(z) if idx < len(self.relus) else z
             self._a.append(x)
 
         logit = float(x[0])                          # scalar
