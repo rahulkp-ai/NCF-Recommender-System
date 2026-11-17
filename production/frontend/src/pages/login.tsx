@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Head><title>Sign In — Netfix</title></Head>
+      <Head><title>Sign In — NCFlix</title></Head>
 
       {/* Full-page background */}
       <div className="min-h-screen bg-black flex items-center justify-center
@@ -39,7 +39,7 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md mx-4">
           {/* Logo */}
           <p className="text-[#E50914] font-black text-4xl text-center mb-8 tracking-tight">
-            NETFIX
+            NCFLIX
           </p>
 
           {/* Card */}
@@ -82,7 +82,7 @@ export default function LoginPage() {
             </form>
 
             <p className="text-gray-400 text-sm mt-8">
-              New to Netfix?{" "}
+              New to NCFlix?{" "}
               <Link href="/signup" className="text-white hover:underline">
                 Sign up now.
               </Link>

@@ -25,7 +25,7 @@ export default function SearchPage() {
   return (
     <>
       <Head>
-        <title>{q ? `"${q}" — Netfix` : "Search — Netfix"}</title>
+        <title>{q ? `"${q}" — NCFlix` : "Search — NCFlix"}</title>
       </Head>
 
       <div className="min-h-screen bg-[#141414] pt-24 px-4 md:px-12 pb-16">

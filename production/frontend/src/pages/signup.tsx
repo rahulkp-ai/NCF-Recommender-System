@@ -31,14 +31,14 @@ export default function SignupPage() {
 
   return (
     <>
-      <Head><title>Sign Up — Netfix</title></Head>
+      <Head><title>Sign Up — NCFlix</title></Head>
 
       <div className="min-h-screen bg-black flex items-center justify-center relative">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black" />
 
         <div className="relative z-10 w-full max-w-md mx-4">
           <p className="text-[#E50914] font-black text-4xl text-center mb-8 tracking-tight">
-            NETFIX
+            NCFLIX
           </p>
 
           <div className="bg-black/80 rounded-md px-10 py-12 border border-gray-800">
