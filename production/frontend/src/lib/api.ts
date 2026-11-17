@@ -6,10 +6,9 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const api = axios.create({ baseURL: BASE, timeout: 10000 });
 
-// Attach JWT on every request
 api.interceptors.request.use((config) => {
   const token = Cookies.get("ncf_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) config.headers.Authorization = "Bearer " + token;
   return config;
 });
 

@@ -8,6 +8,8 @@ GET /api/v1/recommend/popular     — most-interacted movies
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
+import json
+from pathlib import Path
 
 from production.shared.exceptions.errors import NotFoundError
 
@@ -19,6 +21,18 @@ from ...schemas.recommendation import HomepageResponse, RecommendationResponse
 from ..deps import get_current_user
 
 router = APIRouter(prefix="/api/v1/recommend", tags=["recommend"])
+
+
+@router.get("/compare/data")
+def benchmark_comparison():
+    comparison_path = (
+        Path(__file__).resolve().parents[5]
+        / "research"
+        / "evaluation"
+        / "comparison.json"
+    )
+    with comparison_path.open("r", encoding="utf-8") as comparison_file:
+        return json.load(comparison_file)
 
 
 def _rec_service(request: Request):

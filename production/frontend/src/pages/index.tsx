@@ -26,7 +26,7 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Netfix — Smart Recommendations</title>
+        <title>NCFlix — Smart Recommendations</title>
         <meta name="description" content="Netflix-style movie recommendations powered by NCF" />
       </Head>
 
@@ -52,7 +52,7 @@ export default function HomePage() {
           />
 
           <MovieRow
-            title="Popular on Netfix"
+            title="Popular on NCFlix"
             movies={popular}
             loading={popLoading}
           />

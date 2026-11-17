@@ -82,7 +82,7 @@ export default function MovieDetailPage() {
 
   return (
     <>
-      <Head><title>{movie.title} — Netfix</title></Head>
+      <Head><title>{movie.title} — NCFlix</title></Head>
 
       <div className="min-h-screen bg-[#141414] pt-16">
         {/* Hero backdrop */}
