@@ -59,10 +59,7 @@ The correct approach is:
 
 ```python
 ratings = pd.read_csv(
-    "ratings.dat",
-    sep="::",
-    engine="python",
-    names=["UserID", "MovieID", "Rating", "Timestamp"]
+    "ratings.dat", sep="::", engine="python", names=["UserID", "MovieID", "Rating", "Timestamp"]
 )
 ```
 

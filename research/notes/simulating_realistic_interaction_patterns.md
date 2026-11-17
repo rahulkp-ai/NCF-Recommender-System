@@ -81,10 +81,7 @@ Not all users consume content equally.
 Some users interact only occasionally, while others become highly active power users.
 
 ```python
-n_interactions = max(
-    10,
-    int(np.random.normal(INTERACTIONS_PER_USER_MEAN, 20))
-)
+n_interactions = max(10, int(np.random.normal(INTERACTIONS_PER_USER_MEAN, 20)))
 ```
 
 ### Mathematical Foundation
@@ -191,10 +188,7 @@ ensures:
 
 ```python
 chosen = np.random.choice(
-    movie_ids,
-    size=min(n_interactions, len(movie_ids)),
-    replace=False,
-    p=popularity
+    movie_ids, size=min(n_interactions, len(movie_ids)), replace=False, p=popularity
 )
 ```
 
@@ -227,10 +221,7 @@ Each selected movie remains unique.
 ## Action Diversification
 
 ```python
-event_type = random.choices(
-    ["click", "like", "rate"],
-    weights=[0.4, 0.4, 0.2]
-)[0]
+event_type = random.choices(["click", "like", "rate"], weights=[0.4, 0.4, 0.2])[0]
 ```
 
 ### Distribution
@@ -281,9 +272,7 @@ rather than
 ## Historical Timeline Generation
 
 ```python
-created_at = now - timedelta(
-    days=random.randint(0, 365)
-)
+created_at = now - timedelta(days=random.randint(0, 365))
 ```
 
 Benefits:
@@ -362,7 +351,7 @@ The `seen` set is never used.
 Uniqueness is already enforced through:
 
 ```python
-replace=False
+replace = False
 ```
 
 Therefore:
