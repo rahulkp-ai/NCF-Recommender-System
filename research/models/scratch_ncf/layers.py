@@ -26,6 +26,7 @@ class LinearLayer:
     dW : (out_features, in_features)  — gradient of L w.r.t. W
     db : (out_features,)              — gradient of L w.r.t. b
     """
+
     def __init__(self, in_features: int, out_features: int, seed: int = 0):
         rng = np.random.default_rng(seed)
 
@@ -40,7 +41,6 @@ class LinearLayer:
         # Cache for backward pass
         self._x: np.ndarray | None = None
 
-    
     # ── Forward ──────────────────────────────────────────────────────────────
 
     def forward(self, x: np.ndarray) -> np.array:
@@ -55,8 +55,8 @@ class LinearLayer:
         -------
         z : ndarray shape (out_features,)
         """
-        self._x = x.copy()                  # cache for backward
-        return self.W @ x + self.b          # shape (out_features,)
+        self._x = x.copy()  # cache for backward
+        return self.W @ x + self.b  # shape (out_features,)
 
     def backward(self, delta: np.ndarray) -> np.ndarray:
         """
@@ -77,22 +77,23 @@ class LinearLayer:
 
         # Accumulate parameter gradients
         self.dW += np.outer(delta, self._x)  # (out, in)
-        self.db += delta                      # (out,)
+        self.db += delta  # (out,)
 
         # Gradient to pass to previous layer
-        dx = self.W.T @ delta                 # (in,)
+        dx = self.W.T @ delta  # (in,)
         return dx
-    
+
     def zero_grad(self) -> None:
         self.dW[:] = 0.0
         self.db[:] = 0.0
         self._x = None
 
     def __repr__(self):
-        return (f"LinearLayer(in={self.W.shape[1]}, "
-                f"out={self.W.shape[0]})")
+        return f"LinearLayer(in={self.W.shape[1]}, out={self.W.shape[0]})"
 
     # ── Activation functions ──────────────────────────────────────────────────────
+
+
 class ReLU:
     """
     ReLU(x) = max(0, x)
@@ -113,9 +114,10 @@ class ReLU:
 
     def zero_grad(self) -> None:
         self._mask = None
-    
+
     def __repr__(self):
         return "ReLU()"
+
 
 class Sigmoid:
     """

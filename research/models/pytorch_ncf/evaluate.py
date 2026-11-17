@@ -16,7 +16,7 @@ from .train import hit_at_k, ndcg_at_k
 
 RESEARCH_DIR = Path(__file__).resolve().parents[2]
 PROC_DIR = RESEARCH_DIR / "datasets" / "processed"
-LOG_DIR  = RESEARCH_DIR / "evaluation"
+LOG_DIR = RESEARCH_DIR / "evaluation"
 
 
 def full_evaluation(weights_path: str = None) -> dict:
@@ -26,7 +26,7 @@ def full_evaluation(weights_path: str = None) -> dict:
     n_users = meta["n_users"]
     n_items = meta["n_items"]
     test_df = pd.read_csv(PROC_DIR / "test.csv")
-    device  = get_device()
+    device = get_device()
 
     model = PyTorchNCF(n_users, n_items, emb_dim=32, hidden=[64, 32])
     if weights_path is None:
@@ -35,7 +35,7 @@ def full_evaluation(weights_path: str = None) -> dict:
     model.to(device)
 
     print(f"Evaluating on {len(test_df):,} test users...")
-    hit  = hit_at_k(model, test_df, n_items, k=10, device=device)
+    hit = hit_at_k(model, test_df, n_items, k=10, device=device)
     ndcg = ndcg_at_k(model, test_df, n_items, k=10, device=device)
 
     results = {"hit_at_10": round(hit, 4), "ndcg_at_10": round(ndcg, 4)}

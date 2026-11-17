@@ -13,6 +13,7 @@ Key differences from scratch:
 - Uses MPS backend on Apple Silicon
 - loss.backward() replaces manual backward()
 """
+
 import json
 import time
 from pathlib import Path
@@ -35,29 +36,34 @@ LOG_DIR.mkdir(exist_ok=True)
 
 # ── Dataset ──────────────────────────────────────────────────────────────────
 
+
 def build_dataloader(batch_size: int, device: torch.device) -> DataLoader:
     """Load processed numpy arrays and wrap in a PyTorch DataLoader."""
-    users  = torch.from_numpy(np.load(PROC_DIR / "train_users.npy")).long()
-    items  = torch.from_numpy(np.load(PROC_DIR / "train_items.npy")).long()
-    labels = torch.from_numpy(
-        np.load(PROC_DIR / "train_labels.npy").astype(np.float32)
-    )
+    users = torch.from_numpy(np.load(PROC_DIR / "train_users.npy")).long()
+    items = torch.from_numpy(np.load(PROC_DIR / "train_items.npy")).long()
+    labels = torch.from_numpy(np.load(PROC_DIR / "train_labels.npy").astype(np.float32))
     dataset = TensorDataset(users, items, labels)
     return DataLoader(
         dataset,
-        batch_size  = batch_size,
-        shuffle     = True,
-        num_workers = 0,         # 0 is safest for MPS
-        pin_memory  = False,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=0,  # 0 is safest for MPS
+        pin_memory=False,
     )
 
 
 # ── Unified Evaluation: Hit@K, NDCG@K, Precision@K, Recall@K ─────────────────
 
-def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
-             n_items: int, k: int = 10,
-             n_neg: int = 99, seed: int = 0,
-             device: torch.device | None = None) -> dict:
+
+def evaluate(
+    model: PyTorchNCF,
+    val_df: pd.DataFrame,
+    n_items: int,
+    k: int = 10,
+    n_neg: int = 99,
+    seed: int = 0,
+    device: torch.device | None = None,
+) -> dict:
     """
     Evaluates Hit@K, NDCG@K, Precision@K, and Recall@K simultaneously.
     Leave-One-Out Protocol: 1 positive item + n_neg negative samples per user.
@@ -70,28 +76,26 @@ def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
 
     with torch.no_grad():
         for _, row in val_df.iterrows():
-            uid      = int(row.user_id)
+            uid = int(row.user_id)
             pos_item = int(row.item_id)
 
-            neg_items  = rng.integers(0, n_items, size=n_neg).tolist()
-            candidates = [pos_item] + neg_items       # pos item is always index 0
+            neg_items = rng.integers(0, n_items, size=n_neg).tolist()
+            candidates = [pos_item] + neg_items  # pos item is always index 0
 
-            u_tensor = torch.full((len(candidates),), uid,
-                                  dtype=torch.long, device=device)
-            i_tensor = torch.tensor(candidates,
-                                    dtype=torch.long, device=device)
+            u_tensor = torch.full((len(candidates),), uid, dtype=torch.long, device=device)
+            i_tensor = torch.tensor(candidates, dtype=torch.long, device=device)
 
-            scores   = model.predict(u_tensor, i_tensor).cpu().numpy()
-            ranked   = np.argsort(-scores)            # descending order
+            scores = model.predict(u_tensor, i_tensor).cpu().numpy()
+            ranked = np.argsort(-scores)  # descending order
             pos_rank = int(np.where(ranked == 0)[0][0])
 
             # Hits & Rank position logic
-            hit  = 1.0 if pos_rank < k else 0.0
+            hit = 1.0 if pos_rank < k else 0.0
             ndcg = (1.0 / np.log2(pos_rank + 2)) if pos_rank < k else 0.0
-            
+
             # Leave-One-Out metric equivalence:
-            rec  = hit                       # Recall@10 = Hits / 1
-            prec = hit / k                   # Precision@10 = Hits / K
+            rec = hit  # Recall@10 = Hits / 1
+            prec = hit / k  # Precision@10 = Hits / K
 
             hits.append(hit)
             ndcgs.append(ndcg)
@@ -99,31 +103,31 @@ def evaluate(model: PyTorchNCF, val_df: pd.DataFrame,
             recalls.append(rec)
 
     model.train()
-    
+
     return {
-        "hit_at_k":       float(np.mean(hits)),
-        "ndcg_at_k":      float(np.mean(ndcgs)),
+        "hit_at_k": float(np.mean(hits)),
+        "ndcg_at_k": float(np.mean(ndcgs)),
         "precision_at_k": float(np.mean(precisions)),
-        "recall_at_k":    float(np.mean(recalls)),
+        "recall_at_k": float(np.mean(recalls)),
     }
 
 
 # ── Training Loop ─────────────────────────────────────────────────────────────
 
+
 def train(
-    n_epochs:   int   = 20,
-    emb_dim:    int   = 32,
-    hidden:     list | None = None,
-    lr:         float = 1e-3,
-    batch_size: int   = 1024,
-    eval_every: int   = 1,
-    seed:       int   = 42,
+    n_epochs: int = 20,
+    emb_dim: int = 32,
+    hidden: list | None = None,
+    lr: float = 1e-3,
+    batch_size: int = 1024,
+    eval_every: int = 1,
+    seed: int = 42,
 ) -> PyTorchNCF:
     """Train PyTorch NCF and log complete metric evaluation data."""
     hidden = hidden or [64, 32]
     tracker = ExperimentTracker()
-    run_id  = tracker.start_run("pytorch_ncf", {"emb_dim": emb_dim,
-                                                 "hidden": hidden, "lr": lr})
+    run_id = tracker.start_run("pytorch_ncf", {"emb_dim": emb_dim, "hidden": hidden, "lr": lr})
 
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -134,30 +138,27 @@ def train(
     print("=" * 60)
 
     # Data
-    loader  = build_dataloader(batch_size, device)
+    loader = build_dataloader(batch_size, device)
     with open(PROC_DIR / "meta.json") as meta_file:
         meta = json.load(meta_file)
     n_users = meta["n_users"]
     n_items = meta["n_items"]
-    val_df  = pd.read_csv(PROC_DIR / "val.csv")
+    val_df = pd.read_csv(PROC_DIR / "val.csv")
 
     # Model
-    model = PyTorchNCF(n_users, n_items, emb_dim=emb_dim,
-                       hidden=hidden, dropout=0.0).to(device)
+    model = PyTorchNCF(n_users, n_items, emb_dim=emb_dim, hidden=hidden, dropout=0.0).to(device)
     print(model)
     print(f"Parameters: emb_dim={emb_dim}, hidden={hidden}, lr={lr}")
     print(f"Training batches per epoch: {len(loader):,}\n")
 
     # Loss and Optimizer
     criterion = nn.BCEWithLogitsLoss()
-    optimiser = torch.optim.Adam(model.parameters(), lr=lr,
-                                 betas=(0.9, 0.999), eps=1e-8)
+    optimiser = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-8)
 
     log = {
         "type": "pytorch",
         "device": str(device),
-        "config": {"emb_dim": emb_dim, "hidden": hidden,
-                   "lr": lr, "batch_size": batch_size},
+        "config": {"emb_dim": emb_dim, "hidden": hidden, "lr": lr, "batch_size": batch_size},
         "epochs": [],
         "best_hit_at_10": 0.0,
         "best_ndcg_at_10": 0.0,
@@ -165,15 +166,15 @@ def train(
         "best_recall_at_10": 0.0,
     }
 
-    best_hit   = 0.0
-    best_ndcg  = 0.0
-    best_prec  = 0.0
-    best_rec   = 0.0
-    t_start    = time.time()
+    best_hit = 0.0
+    best_ndcg = 0.0
+    best_prec = 0.0
+    best_rec = 0.0
+    t_start = time.time()
 
     for epoch in range(1, n_epochs + 1):
         model.train()
-        epoch_loss  = 0.0
+        epoch_loss = 0.0
         epoch_start = time.time()
 
         for u_batch, i_batch, l_batch in loader:
@@ -182,7 +183,7 @@ def train(
             l_batch = l_batch.to(device)
 
             logits = model(u_batch, i_batch)
-            loss   = criterion(logits, l_batch)
+            loss = criterion(logits, l_batch)
 
             optimiser.zero_grad()
             loss.backward()
@@ -190,53 +191,56 @@ def train(
 
             epoch_loss += loss.item()
 
-        avg_loss   = epoch_loss / len(loader)
+        avg_loss = epoch_loss / len(loader)
         epoch_time = time.time() - epoch_start
 
         metrics = None
         if epoch % eval_every == 0:
             eval_sub = val_df.head(200)
-            metrics  = evaluate(model, eval_sub, n_items, k=10, device=device)
-            
-            best_hit  = max(best_hit, metrics["hit_at_k"])
+            metrics = evaluate(model, eval_sub, n_items, k=10, device=device)
+
+            best_hit = max(best_hit, metrics["hit_at_k"])
             best_ndcg = max(best_ndcg, metrics["ndcg_at_k"])
             best_prec = max(best_prec, metrics["precision_at_k"])
-            best_rec  = max(best_rec, metrics["recall_at_k"])
+            best_rec = max(best_rec, metrics["recall_at_k"])
 
-            print(f"Epoch {epoch:3d}/{n_epochs} | "
-                  f"Loss: {avg_loss:.4f} | "
-                  f"Hit@10: {metrics['hit_at_k']:.4f} | "
-                  f"NDCG@10: {metrics['ndcg_at_k']:.4f} | "
-                  f"Prec@10: {metrics['precision_at_k']:.4f} | "
-                  f"Rec@10: {metrics['recall_at_k']:.4f} | "
-                  f"Time: {epoch_time:.1f}s")
+            print(
+                f"Epoch {epoch:3d}/{n_epochs} | "
+                f"Loss: {avg_loss:.4f} | "
+                f"Hit@10: {metrics['hit_at_k']:.4f} | "
+                f"NDCG@10: {metrics['ndcg_at_k']:.4f} | "
+                f"Prec@10: {metrics['precision_at_k']:.4f} | "
+                f"Rec@10: {metrics['recall_at_k']:.4f} | "
+                f"Time: {epoch_time:.1f}s"
+            )
         else:
-            print(f"Epoch {epoch:3d}/{n_epochs} | "
-                  f"Loss: {avg_loss:.4f} | "
-                  f"Time: {epoch_time:.1f}s")
+            print(f"Epoch {epoch:3d}/{n_epochs} | Loss: {avg_loss:.4f} | Time: {epoch_time:.1f}s")
 
         hit_k = metrics["hit_at_k"] if metrics else 0.0
         tracker.log_epoch(run_id, epoch=epoch, loss=avg_loss, hit_at_10=hit_k)
 
-        log["epochs"].append({
-            "epoch":           epoch,
-            "loss":            round(avg_loss, 6),
-            "hit_at_10":       round(metrics["hit_at_k"], 4) if metrics else None,
-            "ndcg_at_10":      round(metrics["ndcg_at_k"], 4) if metrics else None,
-            "precision_at_10": round(metrics["precision_at_k"], 4) if metrics else None,
-            "recall_at_10":    round(metrics["recall_at_k"], 4) if metrics else None,
-            "time_sec":        round(epoch_time, 2),
-        })
+        log["epochs"].append(
+            {
+                "epoch": epoch,
+                "loss": round(avg_loss, 6),
+                "hit_at_10": round(metrics["hit_at_k"], 4) if metrics else None,
+                "ndcg_at_10": round(metrics["ndcg_at_k"], 4) if metrics else None,
+                "precision_at_10": round(metrics["precision_at_k"], 4) if metrics else None,
+                "recall_at_10": round(metrics["recall_at_k"], 4) if metrics else None,
+                "time_sec": round(epoch_time, 2),
+            }
+        )
 
     total_time = time.time() - t_start
-    log["total_time_sec"]       = round(total_time, 1)
-    log["best_hit_at_10"]       = round(best_hit, 4)
-    log["best_ndcg_at_10"]      = round(best_ndcg, 4)
+    log["total_time_sec"] = round(total_time, 1)
+    log["best_hit_at_10"] = round(best_hit, 4)
+    log["best_ndcg_at_10"] = round(best_ndcg, 4)
     log["best_precision_at_10"] = round(best_prec, 4)
-    log["best_recall_at_10"]    = round(best_rec, 4)
+    log["best_recall_at_10"] = round(best_rec, 4)
 
-    tracker.finish_run(run_id, best_hit_at_10=best_hit, n_epochs=n_epochs,
-                       total_time_sec=total_time)
+    tracker.finish_run(
+        run_id, best_hit_at_10=best_hit, n_epochs=n_epochs, total_time_sec=total_time
+    )
 
     with open(LOG_DIR / "pytorch_ncf_log.json", "w") as f:
         json.dump(log, f, indent=2)

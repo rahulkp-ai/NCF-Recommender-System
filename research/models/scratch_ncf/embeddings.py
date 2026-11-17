@@ -9,8 +9,8 @@ Embedding matrices P (users), Q (items).
 An embedding is a lookup table: given an integer ID, return a dense vector.
 In NumPy this is just matrix indexing; P[user_id, :].
 
-Thesis note: This is equivalant to a one-hot encoded input multiplied by 
-a weight matrix, but the lookup avoids the massive spare matrix multiply. 
+Thesis note: This is equivalant to a one-hot encoded input multiplied by
+a weight matrix, but the lookup avoids the massive spare matrix multiply.
 """
 
 import numpy as np
@@ -29,21 +29,21 @@ class EmbeddingLayer:
 
     def __init__(self, num_embeddings: int, embedding_dim: int, seed: int = 42):
         rng = np.random.default_rng(seed)
-        
+
         # He (Kaiming) initilisation for ReLU network
         # std = sqrt(2 / fan_in)
         # For embeddings fan_in = embedding_dim
-        std         = np.sqrt(2.0 / embedding_dim)
-        self.W      = rng.normal(0, std, (num_embeddings, embedding_dim))
-        self.dW     = np.zeros_like(self.W)
-        
-        self.n      = num_embeddings
-        self.k      = embedding_dim
+        std = np.sqrt(2.0 / embedding_dim)
+        self.W = rng.normal(0, std, (num_embeddings, embedding_dim))
+        self.dW = np.zeros_like(self.W)
+
+        self.n = num_embeddings
+        self.k = embedding_dim
 
         # Cache for backpro - which row did we look up ?
         self._last_idx: int | None = None
-    
-# ── Forward ──────────────────────────────────────────────────────────────
+
+    # ── Forward ──────────────────────────────────────────────────────────────
 
     def forward(self, idx: int) -> np.ndarray:
         """
@@ -75,7 +75,7 @@ class EmbeddingLayer:
         grad : ndarray shape (k,) — gradient of loss w.r.t. embedding vector
         """
         assert self._last_idx is not None, "Call forward() before backward()"
-        self.dW[self._last_idx] += grad     # accumulate (for mini-batches)
+        self.dW[self._last_idx] += grad  # accumulate (for mini-batches)
 
     def zero_grad(self) -> None:
         """
@@ -83,7 +83,6 @@ class EmbeddingLayer:
         """
         self.dW[:] = 0.0
         self._last_idx = None
-    
+
     def __repr__(self):
-        return (f"EmbeddingLayer(num_embeddings={self.n}, "
-                f"embedding_dim={self.k})")
+        return f"EmbeddingLayer(num_embeddings={self.n}, embedding_dim={self.k})"

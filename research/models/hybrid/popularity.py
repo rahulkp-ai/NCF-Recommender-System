@@ -37,7 +37,12 @@ def _register_pickle_compat() -> None:
 
 def build_and_save_engines(
     interactions_path: str | Path = CACHE_DIR / "train.csv",
-    movies_path:       str | Path = RESEARCH_DIR / "datasets" / "raw" / "movielens" / "ml-1m" / "movies.dat",
+    movies_path: str | Path = RESEARCH_DIR
+    / "datasets"
+    / "raw"
+    / "movielens"
+    / "ml-1m"
+    / "movies.dat",
 ) -> tuple[PopularityEngine, ContentEngine]:
     """
     Build popularity and content engines from processed data and save to disk.
@@ -46,12 +51,15 @@ def build_and_save_engines(
     # Load data
     interactions = pd.read_csv(interactions_path)
     movies = pd.read_csv(
-        movies_path, sep="::", engine="python",
-        names=["item_id", "title", "genres"], encoding="latin-1"
+        movies_path,
+        sep="::",
+        engine="python",
+        names=["item_id", "title", "genres"],
+        encoding="latin-1",
     )
 
     # Fit engines
-    pop_engine     = PopularityEngine().fit(interactions)
+    pop_engine = PopularityEngine().fit(interactions)
     content_engine = ContentEngine().fit(movies)
 
     # Cache to disk
@@ -66,7 +74,7 @@ def build_and_save_engines(
 
 def load_engines() -> tuple[PopularityEngine, ContentEngine]:
     """Load pre-built engines from disk (fast, used by API at startup)."""
-    with open(CACHE_DIR / "pop_engine.pkl",     "rb") as f:
+    with open(CACHE_DIR / "pop_engine.pkl", "rb") as f:
         pop = pickle.load(f)
     with open(CACHE_DIR / "content_engine.pkl", "rb") as f:
         content = pickle.load(f)

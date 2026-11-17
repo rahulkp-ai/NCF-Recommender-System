@@ -27,10 +27,7 @@ router = APIRouter(prefix="/api/v1/recommend", tags=["recommend"])
 @router.get("/compare/data")
 def benchmark_comparison():
     comparison_path = (
-        Path(__file__).resolve().parents[5]
-        / "research"
-        / "evaluation"
-        / "comparison.json"
+        Path(__file__).resolve().parents[5] / "research" / "evaluation" / "comparison.json"
     )
     with comparison_path.open("r", encoding="utf-8") as comparison_file:
         return json.load(comparison_file)

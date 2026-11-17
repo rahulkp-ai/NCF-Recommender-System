@@ -25,16 +25,15 @@ LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 
 class ExperimentTracker:
-
     def start_run(self, name: str, config: dict) -> str:
         run_id = str(uuid.uuid4())[:8]
         record = {
-            "run_id":    run_id,
-            "name":      name,
-            "config":    config,
-            "started":   datetime.utcnow().isoformat(),
-            "epochs":    [],
-            "status":    "running",
+            "run_id": run_id,
+            "name": name,
+            "config": config,
+            "started": datetime.utcnow().isoformat(),
+            "epochs": [],
+            "status": "running",
         }
         self._append(record)
         print(f"Experiment {run_id} ({name}) started")
@@ -42,14 +41,16 @@ class ExperimentTracker:
 
     def log_epoch(self, run_id: str, **metrics):
         """Append per-epoch metrics to the run record."""
-        record = {"run_id": run_id, "type": "epoch", **metrics,
-                  "ts": time.time()}
+        record = {"run_id": run_id, "type": "epoch", **metrics, "ts": time.time()}
         self._append(record)
 
     def finish_run(self, run_id: str, **final_metrics):
-        record = {"run_id": run_id, "type": "finish",
-                  "finished": datetime.utcnow().isoformat(),
-                  **final_metrics}
+        record = {
+            "run_id": run_id,
+            "type": "finish",
+            "finished": datetime.utcnow().isoformat(),
+            **final_metrics,
+        }
         self._append(record)
         print(f"Experiment {run_id} finished: {final_metrics}")
 
@@ -68,10 +69,12 @@ class ExperimentTracker:
         print("-" * 70)
         for r in runs.values():
             if r.get("type") != "epoch":
-                print(f"{r['run_id']:<10} {r['name']:<20} "
-                      f"{r.get('best_hit_at_10', '—')!s:<14} "
-                      f"{r.get('n_epochs', '—')!s:<8} "
-                      f"{r.get('finished', '—')[:19]}")
+                print(
+                    f"{r['run_id']:<10} {r['name']:<20} "
+                    f"{r.get('best_hit_at_10', '—')!s:<14} "
+                    f"{r.get('n_epochs', '—')!s:<8} "
+                    f"{r.get('finished', '—')[:19]}"
+                )
 
     def _append(self, record: dict):
         with open(LOG_FILE, "a") as f:

@@ -29,7 +29,7 @@ class BCELoss:
 
     # ── Forward ──────────────────────────────────────────────────────────────
 
-    def forward(self, logit: float, y:float) -> float:
+    def forward(self, logit: float, y: float) -> float:
         """
         Parameters
         ----------
@@ -46,10 +46,9 @@ class BCELoss:
         self._y = y
 
         # Compute numerically stable BCE loss
-        loss = -(y * np.log(y_hat + self.EPS)
-                + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
+        loss = -(y * np.log(y_hat + self.EPS) + (1.0 - y) * np.log(1.0 - y_hat + self.EPS))
         return loss
-    
+
     def backward(self) -> float:
         """
         Gradient of BCE loss w.r.t. the LOGIT (pre-sigmoid value).
@@ -63,9 +62,9 @@ class BCELoss:
         """
         if self._y_hat is None or self._y is None:
             raise ValueError("forward() must be called before backward()")
-        
-        return self._y_hat - self._y        # scalar
-    
+
+        return self._y_hat - self._y  # scalar
+
     def zero_grad(self):
         """
         Reset stored values for the next forward pass.
