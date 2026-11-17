@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NCF Benchmark Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0a0a0a;
+           color: #e8e6de; padding: 24px; min-height: 100vh; }
+    h1  { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+    .sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .metrics { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+    .mc  { background: #1a1a1a; border: 0.5px solid #333; border-radius: 10px; padding: 14px; }
+    .mc-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .mc-val   { font-size: 18px; font-weight: 500; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab  { font-size: 12px; padding: 5px 14px; border-radius: 6px;
+            border: 0.5px solid #444; background: transparent; color: #aaa;
+            cursor: pointer; transition: all .15s; }
+    .tab.on { background: #2a2a2a; color: #eee; border-color: #666; }
+    .chart-card { background: #1a1a1a; border: 0.5px solid #333;
+                  border-radius: 10px; padding: 16px; }
+    .legend { display: flex; gap: 16px; font-size: 12px; color: #888;
+              margin-bottom: 10px; }
+    .ld { width: 12px; height: 3px; border-radius: 2px;
+          display: inline-block; margin-right: 5px; vertical-align: middle; }
+    @media (max-width: 1024px) {
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <h1>NCF Benchmark Dashboard</h1>
+  <p class="sub">Scratch (NumPy) vs PyTorch — live evaluation & training metrics</p>
+
+  <div class="metrics">
+    <div class="mc"><div class="mc-label">Avg Speedup</div>
+      <div class="mc-val" id="m-speedup">—</div></div>
+    <div class="mc"><div class="mc-label">Loss Delta</div>
+      <div class="mc-val" id="m-ldelta">—</div></div>
+    <div class="mc"><div class="mc-label">Hit@10 (PyTorch)</div>
+      <div class="mc-val" id="m-hit">—</div></div>
+    <div class="mc"><div class="mc-label">NDCG@10 (PyTorch)</div>
+      <div class="mc-val" id="m-ndcg">—</div></div>
+    <div class="mc"><div class="mc-label">Precision@10</div>
+      <div class="mc-val" id="m-prec">—</div></div>
+    <div class="mc"><div class="mc-label">Recall@10</div>
+      <div class="mc-val" id="m-rec">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="show('loss',this)">Loss curves</button>
+    <button class="tab" onclick="show('hit',this)">Hit@10</button>
+    <button class="tab" onclick="show('ndcg',this)">NDCG@10</button>
+    <button class="tab" onclick="show('precision',this)">Precision@10</button>
+    <button class="tab" onclick="show('recall',this)">Recall@10</button>
+    <button class="tab" onclick="show('metrics_bar',this)">All Metrics Bar</button>
+    <button class="tab" onclick="show('time',this)">Training time</button>
+    <button class="tab" onclick="show('speedup',this)">Speedup</button>
+  </div>
+
+  <div class="legend">
+    <span><span class="ld" style="background:#D85A30"></span>Scratch NCF</span>
+    <span><span class="ld" style="background:#1D9E75"></span>PyTorch NCF</span>
+  </div>
+
+  <div class="chart-card">
+    <div style="position:relative;height:320px">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <script>
+  let chart = null;
+  let data  = null;
+
+  async function loadData() {
+    try {
+      const r = await fetch('/api/v1/recommend/compare/data');
+      if (!r.ok) throw new Error('Backend benchmark endpoint unavailable');
+      data = await r.json();
+    } catch (error) {
+      try {
+        const r = await fetch('/dashboard/comparison.json');
+        if (!r.ok) throw new Error('Static benchmark data unavailable');
+        data = await r.json();
+      } catch {
+        document.querySelector('.sub').textContent =
+          'Unable to load benchmark metrics from the project evaluation data.';
+        return;
+      }
+    }
+    populate();
+    show('loss', document.querySelector('.tab.on'));
+  }
+
+  function populate() {
+      const c = data.comparison || {};
+      const p = data.pytorch || {};
+
+      // Top KPI Metric Cards
+      document.getElementById('m-speedup').textContent = c.avg_speedup != null ? Number(c.avg_speedup).toFixed(2) + '×' : '—';
+      document.getElementById('m-ldelta').textContent  = c.final_loss_delta != null ? Number(c.final_loss_delta).toFixed(6) : '—';
+      
+      // Dynamically retrieve PyTorch metrics
+      document.getElementById('m-hit').textContent   = p.best_hit != null ? Number(p.best_hit).toFixed(4) : '—';
+      document.getElementById('m-ndcg').textContent  = p.best_ndcg != null ? Number(p.best_ndcg).toFixed(4) : '—';
+      document.getElementById('m-prec').textContent  = p.best_precision != null ? Number(p.best_precision).toFixed(4) : '—';
+      document.getElementById('m-rec').textContent   = p.best_recall != null ? Number(p.best_recall).toFixed(4) : '—';
+  }
+
+  function getMetricSeries(modelObj, key) {
+    const fieldMap = {
+      'hit': 'hit_at_10',
+      'ndcg': 'ndcg_at_10',
+      'precision': 'precision_at_10',
+      'recall': 'recall_at_10'
+    };
+    const targetField = fieldMap[key];
+    if (modelObj[targetField] && modelObj[targetField].length > 0) {
+      return modelObj[targetField];
+    }
+    return [];
+  }
+
+  function show(key, btn) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    if (chart) chart.destroy();
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const opts = { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888', font: { size: 10 } } },
+        y: { ticks: { color: '#888', font: { size: 10 } } }
+      }
+    };
+
+    if (key === 'loss') {
+      chart = new Chart(ctx, { type:'line', data:{labels:data.epochs, datasets:[
+        {label:'Scratch',data:data.scratch.loss,borderColor:'#D85A30',backgroundColor:'transparent',borderWidth:2,tension:.3,pointRadius:0},
+        {label:'PyTorch',data:data.pytorch.loss,borderColor:'#1D9E75',backgroundColor:'transparent',borderWidth:2,tension:.3,pointRadius:0}
+      ]}, options:{...opts, scales:{...opts.scales, y:{...opts.scales.y, min:.28}}} });
+    
+    } else if (['hit', 'ndcg', 'precision', 'recall'].includes(key)) {
+      const sPairs = getMetricSeries(data.scratch, key);
+      const pPairs = getMetricSeries(data.pytorch, key);
+
+      const sEp = sPairs.map(p => p[0]);
+      const sVal = sPairs.map(p => p[1]);
+      const pVal = pPairs.map(p => p[1]);
+
+      chart = new Chart(ctx, { 
+        type: 'line', 
+        data: {
+          labels: sEp, 
+          datasets: [
+            { label: 'Scratch', data: sVal, borderColor: '#D85A30', backgroundColor: 'transparent', borderWidth: 2, tension: .3, pointRadius: 4 },
+            { label: 'PyTorch', data: pVal, borderColor: '#1D9E75', backgroundColor: 'transparent', borderWidth: 2, tension: .3, pointRadius: 4 }
+          ]
+        }, 
+        options: opts 
+      });
+
+    } else if (key === 'metrics_bar') {
+      const labels = ['Hit@10', 'NDCG@10', 'Precision@10', 'Recall@10'];
+      const sScores = [data.scratch.best_hit || 0, data.scratch.best_ndcg || 0, data.scratch.best_precision || 0, data.scratch.best_recall || 0];
+      const pScores = [data.pytorch.best_hit || 0, data.pytorch.best_ndcg || 0, data.pytorch.best_precision || 0, data.pytorch.best_recall || 0];
+
+      chart = new Chart(ctx, { type:'bar', data:{labels:labels, datasets:[
+        {label:'Scratch',data:sScores,backgroundColor:'#D85A30',borderRadius:4},
+        {label:'PyTorch',data:pScores,backgroundColor:'#1D9E75',borderRadius:4}
+      ]}, options:opts });
+
+    } else if (key === 'time') {
+      const sp = data.scratch.time_per_epoch, pp = data.pytorch.time_per_epoch;
+      chart = new Chart(ctx, { type:'line', data:{labels:data.epochs, datasets:[
+        {label:'Scratch',data:sp,borderColor:'#D85A30',backgroundColor:'transparent',borderWidth:2,tension:.1,pointRadius:0},
+        {label:'PyTorch',data:pp,borderColor:'#1D9E75',backgroundColor:'transparent',borderWidth:2,tension:.1,pointRadius:0}
+      ]}, options:{...opts, scales:{...opts.scales, y:{...opts.scales.y, min:0}}} });
+
+    } else if (key === 'speedup') {
+      const su = data.scratch.time_per_epoch.map((s,i) => parseFloat((s/data.pytorch.time_per_epoch[i]).toFixed(1)));
+      const baseline = Array(data.epochs.length).fill(1.0);
+
+      chart = new Chart(ctx, { 
+        type: 'bar', 
+        data: {
+          labels: data.epochs,
+          datasets: [
+            { label: 'Scratch (Baseline 1x)', data: baseline, backgroundColor: '#D85A30', borderRadius: 3 },
+            { label: 'PyTorch Speedup Factor', data: su, backgroundColor: '#1D9E75', borderRadius: 3 }
+          ]
+        },
+        options: {
+          ...opts, 
+          scales: {
+            ...opts.scales, 
+            y: { 
+              ...opts.scales.y, 
+              min: 0,
+              title: { display: true, text: 'Speedup Multiplier (x)', color: '#888', font: { size: 10 } }
+            }
+          }
+        } 
+      });
+    }
+  }
+
+  loadData();
+  </script>
+</body>
+</html>
