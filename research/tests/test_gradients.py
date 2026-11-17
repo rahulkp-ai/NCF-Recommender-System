@@ -3,7 +3,7 @@
 import sys
 
 sys.path.append(".")
-from research.models.scratch_ncf.forward import ScratchNCF
+from research.models.scratch_ncf.forward import Scratch_NCF
 from research.models.scratch_ncf.loss import BCELoss
 
 
@@ -24,7 +24,7 @@ def numerical_gradient(model, loss_fn, uid, iid, y, param, idx, eps=1e-5):
 
 
 def test_output_layer_gradient():
-    model = ScratchNCF(n_users=10, n_items=10, emb_dim=4, hidden=[8, 4])
+    model = Scratch_NCF(n_users=10, n_items=10, emb_dim=4, hidden=[8, 4])
     loss_fn = BCELoss()
 
     uid, iid, y = 3, 7, 1.0
