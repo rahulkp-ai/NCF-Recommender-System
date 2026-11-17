@@ -10,11 +10,9 @@ Two sub-strategies:
                          using genre vectors as a lightweight feature
 """
 
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from functools import lru_cache
-
 
 # ── Popularity engine ─────────────────────────────────────────────────────────
 """
@@ -29,10 +27,6 @@ Two sub-strategies:
                          using genre vectors as a lightweight feature
 """
 
-import numpy as np
-import pandas as pd
-from pathlib import Path
-from functools import lru_cache
 
 
 # ── Popularity engine ─────────────────────────────────────────────────────────

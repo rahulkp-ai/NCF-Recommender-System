@@ -6,9 +6,11 @@ This is the script referenced in your thesis results table.
 """
 
 import json
+from pathlib import Path
+
 import pandas as pd
 import torch
-from pathlib import Path
+
 from .model import PyTorchNCF, get_device
 from .train import hit_at_k, ndcg_at_k
 

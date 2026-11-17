@@ -6,10 +6,11 @@ GET /api/v1/recommend/trending    — trending movies (with posters)
 GET /api/v1/recommend/popular     — most-interacted movies
 """
 
-from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy.orm import Session
 import json
 from pathlib import Path
+
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy.orm import Session
 
 from production.shared.exceptions.errors import NotFoundError
 

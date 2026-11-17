@@ -6,9 +6,11 @@ Used by the FastAPI recommendation service.
 """
 
 import pickle
-import pandas as pd
 from pathlib import Path
-from .cold_start import PopularityEngine, ContentEngine
+
+import pandas as pd
+
+from .cold_start import ContentEngine, PopularityEngine
 
 RESEARCH_DIR = Path(__file__).resolve().parents[2]
 CACHE_DIR = RESEARCH_DIR / "datasets" / "processed"

@@ -12,6 +12,7 @@ This is the most important simplification in the whole model.
 
 import numpy as np
 
+
 class BCELoss:
     """
     Binary Cross-Entropy loss

@@ -15,6 +15,7 @@ a weight matrix, but the lookup avoids the massive spare matrix multiply.
 
 import numpy as np
 
+
 class EmbeddingLayer:
     """
     Learnable embedding matrix of shape (num_embeddings, embedding_dim)

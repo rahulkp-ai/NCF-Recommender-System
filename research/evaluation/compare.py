@@ -7,6 +7,7 @@ comparison payload containing all metrics: Hit@10, NDCG@10, Precision@10, and Re
 
 import json
 from pathlib import Path
+
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent

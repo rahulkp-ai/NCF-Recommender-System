@@ -13,14 +13,15 @@ Scoring formula:
   score    = alpha * ncf_score + (1 - alpha) * cold_score
 """
 
+from pathlib import Path
+
 import numpy as np
 import torch
-from pathlib import Path
-from sqlalchemy.orm import Session
 
 from models.pytorch_ncf.model import PyTorchNCF, get_device
-from .cold_start  import PopularityEngine, ContentEngine
-from .popularity  import load_engines
+
+from .cold_start import ContentEngine, PopularityEngine
+from .popularity import load_engines
 
 # Tunable constants — put these in your thesis as hyperparameters
 N_WARMUP       = 20     # interactions before NCF fully trusted

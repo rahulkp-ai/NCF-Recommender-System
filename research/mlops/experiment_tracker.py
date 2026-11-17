@@ -17,8 +17,8 @@ Then query with:
 import json
 import time
 import uuid
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 LOG_FILE = Path(__file__).resolve().parent / "experiments.jsonl"
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)

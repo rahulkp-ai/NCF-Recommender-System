@@ -7,12 +7,13 @@ Logs loss per epoch and evaluates Hit@10, NDCG@10, Precision@10, and Recall@10.
 
 import json
 import time
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 
 from research.mlops.experiment_tracker import ExperimentTracker
+
 from .forward import Scratch_NCF
 from .loss import BCELoss
 from .optimizer import Adam
@@ -228,7 +229,7 @@ def train(
         json.dump(log, f, indent=2)
 
     print(f"\nTraining complete in {total_time:.1f}s | Best Hit@10: {best_hit:.4f}")
-    print(f"Log saved to evaluation/scratch_ncf_log.json")
+    print("Log saved to evaluation/scratch_ncf_log.json")
 
     # Save model weights
     np.savez(LOG_DIR / "scratch_ncf_weights.npz",

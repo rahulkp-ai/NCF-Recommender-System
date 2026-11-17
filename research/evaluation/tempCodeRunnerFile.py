@@ -7,12 +7,13 @@ All figures saved to evaluation/figures/ as both PNG (300 DPI) and PDF.
 """
 
 import json
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 if str(ROOT_DIR) not in sys.path:
@@ -20,7 +21,6 @@ if str(ROOT_DIR) not in sys.path:
 
 # Import run_comparison directly to update comparison.json automatically
 from research.evaluation.compare import run_comparison
-
 
 matplotlib.rcParams.update({
     "font.family":       "sans-serif",

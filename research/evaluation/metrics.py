@@ -10,11 +10,10 @@ Implements the exact protocol from He et al. (2017):
 Also implements Precision@K and Recall@K for thesis completeness.
 """
 
+from collections.abc import Callable
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Callable
-
 
 # ── Core ranking metrics ──────────────────────────────────────────────────────
 

@@ -15,7 +15,6 @@ MPS (Apple Silicon) acceleration is enabled automatically when available.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 def get_device() -> torch.device:

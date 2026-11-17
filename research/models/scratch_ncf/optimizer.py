@@ -9,6 +9,7 @@ understand SGD first — it is the conceptual foundation.
 
 import numpy as np
 
+
 class SGD:
     """
     Stochastic Gradient Descent with optional momentum.

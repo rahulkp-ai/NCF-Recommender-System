@@ -8,6 +8,7 @@ to compute weight gradients during backward pass.
 
 import numpy as np
 
+
 class LinearLayer:
     """
     Fully-connected layer: z = W @ x + b

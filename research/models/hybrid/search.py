@@ -5,6 +5,7 @@ Title search with hybrid recommendation fallback.
 """
 
 from sqlalchemy.orm import Session
+
 from .hybrid_engine import HybridEngine
 
 

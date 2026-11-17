@@ -15,14 +15,16 @@ Key differences from scratch:
 """
 import json
 import time
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset, DataLoader
-from pathlib import Path
+from torch.utils.data import DataLoader, TensorDataset
 
 from research.mlops.experiment_tracker import ExperimentTracker
+
 from .model import PyTorchNCF, get_device
 
 RESEARCH_DIR = Path(__file__).resolve().parents[2]
@@ -237,7 +239,7 @@ def train(
         json.dump(log, f, indent=2)
 
     print(f"\nTraining complete in {total_time:.1f}s | Best Hit@10: {best_hit:.4f}")
-    print(f"Log saved to evaluation/pytorch_ncf_log.json")
+    print("Log saved to evaluation/pytorch_ncf_log.json")
 
     torch.save(model.state_dict(), LOG_DIR / "pytorch_ncf_weights.pt")
     print("Weights saved to evaluation/pytorch_ncf_weights.pt")

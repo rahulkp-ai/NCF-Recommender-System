@@ -6,8 +6,10 @@ Also provides the full backward pass through the same wiring in reverse.
 """
 
 import numpy as np
+
 from .embeddings import EmbeddingLayer
 from .layers import LinearLayer, ReLU
+
 
 class Scratch_NCF:
     """
