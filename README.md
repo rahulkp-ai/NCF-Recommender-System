@@ -126,19 +126,55 @@ renamed rather than just moved.
 
 ### Evaluation
 
-- Hit@10
-- NDCG@10
-- Training loss comparison
+- Hit@10, NDCG@10, Precision@10, and Recall@10
+- Per-epoch training loss and elapsed time
+- Average and total NumPy-to-PyTorch speedup
 
 ---
 
 ## Model Performance
 
-| Metric   | Scratch NCF | PyTorch NCF |
-| -------- | ----------- | ----------- |
-| BCE Loss | 0.6133      | 0.6111      |
-| Hit@10   | 0.6279      | 0.6293      |
-| NDCG@10  | —           | 0.3541      |
+Results from the committed 20-epoch comparison in
+[`research/evaluation/comparison.json`](research/evaluation/comparison.json).
+Values are evaluation results from the project logs, not live production
+traffic.
+
+| Metric | Scratch NCF (NumPy) | PyTorch NCF |
+| ------ | ------------------: | ----------: |
+| Final training loss | 0.225669 | 0.230396 |
+| Best Hit@10 | 0.6000 | 0.5950 |
+| Best NDCG@10 | 0.3249 | 0.3261 |
+| Best Precision@10 | 0.0600 | 0.0595 |
+| Best Recall@10 | 0.6000 | 0.5950 |
+| Total training time (20 epochs) | 3,105.4 s | 1,089.3 s |
+| Mean time per epoch | 155.09 s | 54.18 s |
+
+PyTorch averaged **2.86× per-epoch speedup** (2.85× overall) on the recorded
+comparison run. The PyTorch training log records an Apple MPS device. The
+dashboard visualizes the per-epoch loss, ranking metrics, training time, and
+speedup alongside the summary metrics above.
+
+### NCFlix adaptive cold-start metrics
+
+The NCFlix home indicator reports the production recommendation profile for
+the signed-in user:
+
+- **NCF α** increases with the user's recorded interactions:
+  `α = min(1, interaction_count / 20)`.
+- **Cold-start β** is the remaining weight: `β = 1 - α`.
+- The strategy is **Cold start** at α = 0, **Learning** while 0 < α < 0.5,
+  and **Personalised** once α reaches 0.5.
+- The displayed interaction count is measured against the 20-interaction
+  warm-up target. Successful movie clicks and likes update the count,
+  recommendation weights, and personalized recommendations.
+
+Interaction tracking requires sign-in. Signed-out visitors see the initial
+cold-start state (α = 0%, β = 100%) and are prompted to sign in before
+interactions can be saved.
+
+Run the app with Docker Compose as described below to access NCFlix at
+`http://localhost:3000/ncflix` and its benchmark dashboard at
+`http://localhost:3000/dashboard`.
 
 ---
 
