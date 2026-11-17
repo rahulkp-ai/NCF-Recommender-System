@@ -66,6 +66,11 @@
   .gradient-bottom {
     background: linear-gradient(to top, #141414 0%, transparent 60%);
   }
+
+  .ncflix-row {
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+  }
   .gradient-left {
     background: linear-gradient(to right, #141414 30%, transparent 100%);
   }
